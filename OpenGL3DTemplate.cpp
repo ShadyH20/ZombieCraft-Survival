@@ -1,0 +1,2149 @@
+//#include <glew.h>
+#include "Model_3DS.h"
+#include <classes/sound/Sound.h>
+//#include "GLTexture.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <glut.h>
+#include "utilities.hpp"
+#include "seesaw.hpp"
+#include <Vector3f.h>
+#include "collision.hpp"
+#include "Camera.hpp"
+#include <classes/enemy/Zombie.h>
+#include <classes/enemy/Skeleton.h>
+#include <textures/Player/Player.h>
+#include <classes/weapon/Weapon.h>
+#include <classes/weapon/pistol/Pistol.h>
+#include <classes/weapon/scar/Scar.h>
+
+//#include "Enemy.h"
+#include <string>
+#include <algorithm> // Make sure this line is included
+#include <vector>
+#include <classes/hud/HUD.h>
+#include <classes/goal/Goal.h>
+#include <classes/wave/Wave.h>
+#include <classes/weapon/sniper/Sniper.h>
+//#include <textures/Player/Cuboid.h>
+//#include <textures/Player/Player.cpp>
+
+//#define GLT_IMPLEMENTATION
+//#include "gltext.h"
+
+#define GLUT_KEY_ESCAPE 27
+#define DEG2RAD(a) (a * 0.0174532925)
+
+
+/// FIRST PERSON ////
+#define FPS 60
+#define TO_RADIANS 3.14/180.0
+#define TO_DEGREES 180.0/3.14
+
+struct Motion
+{
+	bool Forward, Backward, Left, Right, Up, Down;
+};
+
+Motion motion = { false,false,false,false,false,false };
+
+
+//width and height of the window ( Aspect ratio 16:9 )
+const int width = 16 * 50;
+const int height = 9 * 50;
+
+float pitch = 0.0, yaw = 0.0;
+//float steve->x = 0.0, steve->y = -0.25, steve->z = 0.0;
+
+//Camera
+float cameraX = 0.0f;
+float cameraY = 0.0f;
+float cameraZ = 0.0f;
+
+float centerX = 0.0f;
+float centerY = 0.0f;
+float centerZ = 0.0f;
+
+void init();
+void display();
+void reshape(int w, int h);
+void timer(int);
+void passive_motion(int, int);
+void cameraFP();
+void keyboardFP(unsigned char key, int x, int y);
+void keyboard_upFP(unsigned char key, int x, int y);
+void mouseFP(int button, int state, int x, int y);
+void shoot();
+void spawnEnemies();
+/////////////////////
+
+const double screenW = 1600.0;
+const double screenH = 900.0;
+
+
+// Game State
+bool reachedGoal = false;
+bool hasWon = false;
+bool hasLost = false;
+
+float maxTime = 200;
+int timeLeft = maxTime;
+
+double deltaTime = 0.1f;
+
+// Third Person
+bool thirdPerson = false;
+bool faceCamera = false;
+
+bool cameraRight = false;
+bool cameraLeft = false;
+int playerDir = 0;
+
+float playerW = 0.1;
+
+// Movement
+float moveSpeed = 0.0150f;
+float currentSpeed = 0.0f;
+float targetSpeed = 0.0f;
+
+// Rotation
+float rotationSpeed = 70.0f;
+float playerRot = 90.0;
+int targetAngle = 90;
+
+// Seesaw
+bool ridingSeesaw = false;
+float seesawX = 1.0f;
+float seesawZ = 1.0f;
+bool withinSeesaw = false;
+
+float playerYSeesaw = 0.0f;
+float playerXSeesaw = 0.0f;
+float playerZSeesaw = 0.0f;
+float playerRotSeesaw = -90.0f;
+
+
+// Ferris Wheel
+bool ridingFerrisWheel = false;
+float ferrisWheelRot = 0;
+float ferrisWheelX = 3.0f;
+float ferrisWheelZ = 1.0f;
+bool withinFerrisWheel = false;
+
+float playerYFerrisWheel = 0.0f;
+float playerXFerrisWheel = 0.0f;
+float playerZFerrisWheel = 0.0f;
+float playerRotFerrisWheel = 0.0f;
+
+float minX = 0.1;
+float minZ = 0.1;
+float maxX = 3.9;
+float maxZ = 3.9;
+
+// Trash can
+float lidY = 0;
+bool trashcanAnimating = false;
+
+
+// Donut
+float donutRot = 0;
+float donutY = 0;
+
+//Wall
+//147, 77, 44
+float wallR = 144;
+float wallG = 77;
+float wallB = 44;
+
+
+// Pistol
+float pistolXOrig = 0.1, pistolYOrig = -0.25 / 5, pistolZOrig = -1.5 / 5;
+float pistolX = pistolXOrig, pistolY = pistolYOrig, pistolZ = pistolZOrig;
+float pistolRot = 10;
+
+bool isAnimatingPistol = false;
+bool isRightRotation = true;
+float pistolAnimCurTime = 0.0f;
+float pistolAnimDuration = 0.3f;
+float pistolRecoilAngle = 0.0f;
+
+// Player
+Player* steve;
+float runSpeed = 3.0;
+float aimSpeed = 1.5;
+float playerSpeed = runSpeed;
+float playerZFromCamera = 0.5f;
+float playerYFromCamera = 0.5f;
+
+bool mouseRightDown = false;
+bool mouseLeftDown = false;
+bool mouseTrackingEnabled = true;
+
+// Dragon
+float dragonWingsAngle = 0;
+bool dragonWingsAnimating = true;
+float dragonWingsAnimDuration = 2.0f;
+float dragonWingsAnimCurTime = 0.0f;
+
+// Game Stuff
+// Light intensity
+float intensityX = 0.7f, intensityY = 0.7f, intensityZ = 0.7f;
+bool increaseIntensity = false;
+
+Vector3f lightPos = Vector3f(-50, 100, -240);
+Vector3f sunPos = Vector3f(-50, 100, -240);
+
+Vector3f lightColor = Vector3f(250, 203, 20);
+Vector3f sunColor = Vector3f(250, 203, 20);
+Vector3f moonColor = Vector3f(147, 163, 177);
+
+Vector3f lightEmissionColor = Vector3f(250, 80, 20);
+Vector3f sunEmissionColor = Vector3f(250, 80, 20);
+Vector3f moonEmissionColor = Vector3f(47, 63, 77);
+
+int score = 0;
+
+// Wave
+Wave* wave;
+
+// Enemies
+std::unordered_map<int, Enemy*> Enemy::enemyInstances;
+std::vector<Enemy*> enemies;
+
+// Zombies
+std::unordered_map<int, Zombie*> Zombie::zombieInstances;
+std::vector<Zombie*> zombies;
+
+// Skeletons
+std::unordered_map<int, Skeleton*> Skeleton::skeletonInstances;
+std::vector<Skeleton*> skeletons;
+Sound* Skeleton::arrow_shot_sound = nullptr;
+
+// Hearts
+std::vector<Vector3f> hearts;
+
+// Ammo
+std::vector<Vector3f> ammos;
+
+
+// 
+
+// HUD
+HUD* hud;
+
+// Weapons
+Pistol* pistol;
+Scar* scar;
+Sniper* sniper;
+
+// Goal
+Goal* church;
+
+// Model Variables
+Model_3DS model_church;
+Model_3DS model_house;
+Model_3DS model_tree;
+Model_3DS model_creeper;
+Model_3DS model_sword;
+Model_3DS model_torch;
+Model_3DS model_village;
+Model_3DS model_pistol;
+Model_3DS model_shotgun;
+Model_3DS model_dragon;
+Model_3DS model_zombie;
+Model_3DS model_bow;
+Model_3DS model_scar;
+Model_3DS model_sniper;
+Model_3DS model_arrow;
+Model_3DS model_skeleton;
+Model_3DS model_villa;
+Model_3DS model_heart;
+Model_3DS model_nether;
+
+float villageScale = 0.5;
+
+// Textures
+GLTexture tex_ground;
+GLTexture tex_path;
+GLuint tex_sky;
+GLuint tex_moon;
+
+
+// Sounds
+Sound* pistol_sound;
+Sound* scar_sound;
+Sound* bg_music;
+Sound* damage_sound;
+
+// Cuboids
+
+
+// Text
+float textOpacity = 0.0f;
+
+
+Camera camera;
+
+
+void movePlayer(int value)
+{
+	if (ridingSeesaw || ridingFerrisWheel) {
+		glutPostRedisplay();
+		glutTimerFunc(30, movePlayer, 0);
+		return;
+	}
+
+	// Update the current x and y using linear interpolation
+	if (currentSpeed != targetSpeed)
+	{
+		double speedDiff = targetSpeed - currentSpeed;
+		// std::cout << "speed diff: " << speedDiff << "\n";
+		double speedAmount = fabs(speedDiff) * deltaTime;
+
+		if (fabs(speedDiff) < 0.2f)
+		{
+			currentSpeed = targetSpeed;
+		}
+		else if (speedDiff > 0)
+		{
+			currentSpeed += speedAmount;
+		}
+		else
+		{
+			currentSpeed -= speedAmount;
+		}
+	}
+
+
+	float pRot = thirdPerson ? playerRot + playerDir : playerRot;
+
+	if (targetAngle != 90 && targetAngle != 270)
+		steve->x += currentSpeed * cos(pRot * 3.14159 / 180.0);
+	if (targetAngle != 0 && targetAngle != 180)
+		steve->z += -currentSpeed * sin(pRot * 3.14159 / 180.0);
+
+
+	// make sure the player doesn't go out of bounds
+	if (steve->x < minX) steve->x = minX;
+	if (steve->x > maxX) steve->x = maxX;
+	if (steve->z < minZ) steve->z = minZ;
+	if (steve->z > maxZ) steve->z = maxZ;
+
+	// detect coillision with donut
+	float distance = sqrt(pow(steve->x - 3.5, 2) + pow(steve->z - 3.5, 2));
+	if (distance < 0.17)
+	{
+		reachedGoal = true;
+		//glutTimerFunc(3000, collidedWithGoal, 0);
+	}
+
+	glutPostRedisplay();
+
+	glutTimerFunc(30, movePlayer, 0);
+}
+
+void rotatePlayer(int value)
+{
+	if (ridingSeesaw) {
+		glutPostRedisplay();
+		glutTimerFunc(30, rotatePlayer, 0);
+		return;
+	}
+	// Update the current angle using linear interpolation
+	if (playerRot != targetAngle)
+	{
+		float angleDiff = targetAngle - playerRot;
+		if (angleDiff > 180.0f)
+		{
+			angleDiff -= 360.0f;
+		}
+		else if (angleDiff < -180.0f)
+		{
+			angleDiff += 360.0f;
+		}
+		float rotationAmount = rotationSpeed * deltaTime;
+
+		/*if (fabs(angleDiff) < rotationAmount) {
+			rot = targetAngle;
+		}*/
+		// else
+		if (angleDiff > 0)
+		{
+			// rot += rotationAmount;
+			playerRot += fabs(angleDiff) * 0.15;
+		}
+		else
+		{
+			// playerRot -= rotationAmount;
+			playerRot -= fabs(angleDiff) * 0.15;
+		}
+		if (playerRot >= 360.0f)
+		{
+			playerRot -= 360.0f;
+		}
+		else if (playerRot < 0.0f)
+		{
+			playerRot += 360.0f;
+		}
+	}
+
+	glutPostRedisplay();
+
+	glutTimerFunc(30, rotatePlayer, 0);
+}
+
+void setupLights() {
+	// Light 0 (ambient light)
+	//GLfloat ambientM[] = { 0.7f, 0.7f, 0.7, 1.0f };
+	//GLfloat diffuseM[] = { 0.6f, 0.6f, 0.6, 1.0f };
+	//GLfloat specularM[] = { 2.0f, 2.0f, 2.0, 1.0f };
+	//GLfloat shininessM[] = { 50 };
+
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambientM);
+	//glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseM);
+	//glMaterialfv(GL_FRONT, GL_SPECULAR, specularM);
+	//glMaterialfv(GL_FRONT, GL_SHININESS, shininessM);
+
+	// Light 0 setup (ambient light)
+	//glEnable(GL_LIGHT0);
+	////GLfloat lightPosition[] = { -7.0f, 5.0f, 5.0f, 0.0f };
+	////GLfloat lightPosition[] = { -7.0f, 10.0f, 5.0f, 0.0f };
+	//GLfloat lightPosition[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+	//glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	//GLfloat lightIntensity[] = { 1, 1, 1, 1.0f };
+	//glLightfv(GL_LIGHT0, GL_DIFFUSE, lightIntensity);
+
+	glEnable(GL_LIGHT0);
+
+	// Define Light source 0 ambient light
+	GLfloat ambient[] = { intensityX, intensityY, intensityZ, 1.0f };
+	//GLfloat ambient[] = { 0.01, 0.01, 0.01, 1.0f };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+
+	// Define Light source 0 diffuse light
+	GLfloat diffuse[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+
+	// Define Light source 0 Specular light
+	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+
+	// Finally, define light source 0 position in World Space
+	//GLfloat light_position[] = { 0.0f, 100.0f, 0.0f, 0.0f };
+	GLfloat light_position[] = { -50, 100, -240, 0.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	// Light 1 setup (torch tip)
+	//glEnable(GL_LIGHT1);
+	GLfloat lightPosition2[] = { 3, 0.085, 3, 1.0 }; // Specify the position (homogeneous coordinates)
+	GLfloat lightColor2[] = { 1.0, 0.8, 0.2, 1.0 }; // Specify the color (RGBA)
+	GLfloat spotDirection[] = { 0.0, 0.0, -1.0 }; // Specify the spotlight direction (x, y, z)
+
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor2);
+	/*glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spotDirection);
+	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 2.0);*/
+
+	//ATTENUATION
+	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.5);
+	glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5);
+	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.5);
+}
+
+//void setupCamera() {
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	gluPerspective(60, screenW / screenH, 0.001, 100);
+//
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
+//
+//	if (thirdPerson)
+//	{
+//		//printf("Target angle: %d\n", rem);
+//		//printf("Target angle: %d\n", playerRot);
+//		float steve->y = ridingSeesaw ? steve->ySeesaw : ridingFerrisWheel ? steve->yFerrisWheel : 0;
+//		float playerAngleY = DEG2RAD(ridingSeesaw ? playerRotSeesaw : ridingFerrisWheel ? playerRotFerrisWheel : playerRot);
+//		//float playerAngleY = DEG2RAD(playerRotSeesaw);
+//		float distance = 1;  // Adjust this value for the desired distance from the player
+//
+//		float camsteve->x = ridingSeesaw ? steve->xSeesaw : ridingFerrisWheel ? steve->xFerrisWheel : steve->x;
+//		float camsteve->z = ridingSeesaw ? steve->zSeesaw : ridingFerrisWheel ? steve->zFerrisWheel : steve->z;
+//
+//		float camX = camsteve->x + distance * sin(ridingSeesaw ? DEG2RAD(-180) : (DEG2RAD(-90) + playerAngleY));
+//		float camY = steve->y + 0.6;  // Adjust this value for the desired height of the camera
+//
+//		float camZ = camsteve->z + distance * cos(ridingSeesaw ? DEG2RAD(-180) : (DEG2RAD(-90) + playerAngleY));
+//
+//		gluLookAt(camX, camY, camZ,
+//			camsteve->x, steve->y + 0.2, camsteve->z,
+//			0, 1, 0);
+//
+//		// Rotate the camera
+//		if (cameraRight)
+//		{
+//			targetAngle -= 1.0f;
+//		}
+//		else if (cameraLeft)
+//		{
+//			targetAngle += 1.0f;
+//		}
+//	}
+//	else
+//	{
+//		camera.look();
+//	}
+//
+//	//log the camera eye, center, up
+//	/*printf("\neye= Vector3f(%f, %f, %f);\n", camera.eye.x, camera.eye.y, camera.eye.z);
+//	printf("center= Vector3f(%f, %f, %f);\n", camera.center.x, camera.center.y, camera.center.z);
+//	printf("up= Vector3f(%f, %f, %f);\n", camera.up.x, camera.up.y, camera.up.z);*/
+//
+//
+//}
+
+
+void renderText() {
+	glColor3f(0, 0, 0);
+
+	print(screenW/2 - 7, screenH/2, "+", 1);
+
+	//drawTime(screenW, screenH, timeLeft);
+
+	//print(screenW / 2 - 30, 300, "Ammo: 36 / 98", 1);
+
+
+	glPushMatrix();
+		// Reset color
+		glColor3f(1, 1, 1);
+
+		// HUD
+		hud->draw();
+	glPopMatrix();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+	
+
+	//enable3D();
+}
+
+int groundSize = 60;
+
+void RenderGround()
+{
+	glDisable(GL_LIGHTING);	// Disable lighting 
+
+	float intX = fmax(0.2, intensityX);
+	float intY = fmax(0.2, intensityY);
+	float intZ = fmax(0.2, intensityZ);
+	glColor3f(intX, intY, intZ);	// Set material to white
+
+	glEnable(GL_TEXTURE_2D);	// Enable 2D texturing
+
+	glBindTexture(GL_TEXTURE_2D, tex_ground.texture[0]);	// Bind the ground texture
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glNormal3f(0, 1, 0);	// Set quad normal direction.
+	glTexCoord2f(0, 0);		// Set tex coordinates ( Using (0,0) -> (5,5) with texture wrapping set to GL_REPEAT to simulate the ground repeated grass texture).
+	glVertex3f(-groundSize, 0, -groundSize);
+	glTexCoord2f(30, 0);
+	glVertex3f(groundSize, 0, -groundSize);
+	glTexCoord2f(30, 30);
+	glVertex3f(groundSize, 0, groundSize);
+	glTexCoord2f(0, 30);
+	glVertex3f(-groundSize, 0, groundSize);
+	glEnd();
+	glPopMatrix();
+
+	// draw the path which is 4 textures wide from z = 10 to z = 15
+	glBindTexture(GL_TEXTURE_2D, tex_path.texture[0]);	// Bind the ground texture
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glNormal3f(0, 1, 0);	// Set quad normal direction.
+	glTexCoord2f(0, 0);		// Set tex coordinates ( Using (0,0) -> (5,5) with texture wrapping set to GL_REPEAT to simulate the ground repeated grass texture).
+	glVertex3f(-groundSize, 0.01, 10);
+	glTexCoord2f(2 * groundSize, 0);
+	glVertex3f(groundSize, 0.01, 10);
+	glTexCoord2f(2 * groundSize, 4);
+	glVertex3f(groundSize, 0.01, 15);
+	glTexCoord2f(0, 4);
+	glVertex3f(-groundSize, 0.01, 15);
+	glEnd();
+	glPopMatrix();
+
+		
+
+
+	glEnable(GL_LIGHTING);	// Enable lighting again for other entites coming throung the pipeline.
+
+	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
+}
+
+void drawHearts() {
+	for (int i = 0; i < hearts.size(); i++) {
+		Vector3f heart = hearts[i];
+
+		// draw heart
+		glPushMatrix();
+			glTranslatef(heart.x,
+				0.4 + 0.06 * sin(textOpacity * TO_RADIANS),
+				heart.z);
+			// Rotate y using textOpacity var
+			glRotatef(textOpacity * 0.5, 0, 1, 0);
+
+			//glScaled(0.5, 0.5, 0.5);
+			model_heart.Draw();
+			model_heart.scale = 0.03;
+		glPopMatrix();
+	}
+
+	// Check collision with player
+	if (steve->hp != steve->maxHp)
+	{
+		for (int i = 0; i < hearts.size(); i++) {
+			Vector3f heart = hearts[i];
+			float distance = sqrt(pow(steve->x - heart.x, 2) + pow(steve->z - heart.z, 2));
+			if (distance < 0.5) {
+				// remove the heart from the vector
+				hearts.erase(hearts.begin() + i);
+				// add a heart to the player
+				steve->heal(100);
+				// play sound
+				//damage_sound->play();
+			}
+		}
+	}
+}
+
+void Display() {
+	if (hasWon) {
+		enable2D();
+		glColor3f(0, 0, 0);
+
+		//printf("You lost!\n");
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		bgColorRGB(171, 201, 229, 1);
+
+		BLUE_GREY_COLOR();
+		print(screenW / 2 - 50, screenH / 2, "You won!", 1);
+		float opacity = (sin(textOpacity * 3.1415 / 180) + 1) / 2;
+		colorRGBA(65, 90, 105, opacity);
+
+
+		// display this if the player is within 0.2 units of the seesaw
+		// calculate distance between player and seesaw
+		print(screenW / 2 - 100, screenH / 5, "Press 'r' to restart", 1);
+
+		glFlush();
+		return;
+	}
+
+	if (hasLost) {
+		enable2D();
+		glColor3f(0, 0, 0);
+
+		//printf("You lost!\n");
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		bgColorRGB(171, 201, 229, 1);
+
+		BLUE_GREY_COLOR();
+		print(screenW / 2 - 50, screenH / 2, "You lost!", 1);
+		float opacity = (sin(textOpacity * 3.1415 / 180) + 1) / 2;
+		colorRGBA(65, 90, 105, opacity);
+
+
+		// display this if the player is within 0.2 units of the seesaw
+		// calculate distance between player and seesaw
+		print(screenW / 2 - 100, screenH / 5, "Press 'r' to restart", 1);
+
+		glFlush();
+		return;
+	}
+
+	//enable3D();
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	//setupCamera();
+	cameraFP();
+	setupLights();
+
+	bgColorRGB(171, 201, 229, 1);
+
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	//// Draw torch Model
+	//GLfloat emissionColor[] = { 0,0,0,0 }; // Specify the emission color (RGBA)
+
+	//glPushMatrix();
+	//GLfloat material_Ka[] = { 0.11,0.06, 0.11, 1.00 };
+	//GLfloat material_Kd[] = { 0.43, 0.47, 0.54, 1.00 };
+	////GLfloat material_Ks[] = { 0.33, 0.33, 0.52, 1.00 };
+	//GLfloat material_Ks[] = { 1,1,1, 1.00 };
+	//GLfloat material_Ke[] = { 1.0, 1.0, 0.2, 0.00 };
+	//GLfloat material_Se = 10;
+
+	////glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
+	////glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
+	////glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
+	////glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+	////glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
+
+	//glPushMatrix();
+
+	////glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
+
+	//glTranslatef(3, 0.085, 3);
+	////glScalef(.10,.10,.1);
+	////glRotatef(90.f, 0, 0, 1);
+
+
+	//model_torch.Draw();
+	//model_torch.scale = 0.1;
+
+	////glPushMatrix();
+	////glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+
+	//////cube
+	////glTranslatef(0, 0.05, 0);
+	////glScalef(0.03, 0.03, 0.03);
+	//////glutSolidCube(1);
+
+	////// reset the material
+	////glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
+	////glDisable(GL_LIGHTING);
+	////glPopMatrix();
+
+	//glPopMatrix();
+
+	//glPopMatrix();
+
+	// Ground
+	RenderGround();
+
+	// DRAW STEVE
+	glPushMatrix();
+		steve->isMoving = motion.Forward || motion.Backward || motion.Left || motion.Right;
+		steve->Move();
+
+		glPushMatrix();
+			if (!thirdPerson)
+			{
+				glRotatef(yaw, 0, 1, 0);
+				glRotatef(pitch, 1, 0, 0);
+				glRotatef(pistolRot, 0, 1, 0);
+
+				//float offset = steve->currentWeapon->xOffset;
+				glTranslatef((pistolX) * 1.3, -0.05, -0.15);
+			}
+
+			if (thirdPerson) 
+			{
+				if (faceCamera) {
+					glRotatef(yaw, 0, 1, 0);
+				}
+				else {
+					float extraRot = mouseRightDown? 15 : 10;
+					glRotatef(yaw - extraRot, 0, 1, 0);
+				}
+			}
+
+			steve->Look(yaw, (thirdPerson && faceCamera) ? -pitch : pitch);
+			steve->Draw(thirdPerson, model_pistol, pistolRecoilAngle);
+		glPopMatrix();
+
+	glPopMatrix();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+
+
+
+	// draw dragon
+	glPushMatrix();
+	glTranslatef(5, 8.0, 2);
+	//glScaled(0.5, 0.5, 0.5);
+	model_dragon.Draw();
+	model_dragon.scale = 1;
+
+	//float dragRot = dragonWingsAngle
+
+	// set z rotation of objects 1 and 2
+	model_dragon.Objects[1].rot.z = 5 - dragonWingsAngle;
+	model_dragon.Objects[2].rot.z = -5 + dragonWingsAngle;
+	/*model_dragon.Objects[1].rot.z = -0;
+	model_dragon.Objects[2].rot.z = 0;*/
+
+	// objects 1 and 2 are the wings
+	// they are each 0.5 units away from the center of the dragon
+	// their rotation is about the center of the dragon
+	// so we need to translate them to compensate for the rotation
+	model_dragon.Objects[1].pos.x = -1.5 * sin(dragonWingsAngle * TO_RADIANS);
+	model_dragon.Objects[1].pos.y = 1 * sin(dragonWingsAngle * TO_RADIANS);
+
+	model_dragon.Objects[2].pos.x = 1.5 * sin(dragonWingsAngle * TO_RADIANS);
+	model_dragon.Objects[2].pos.y = 1 * sin(dragonWingsAngle * TO_RADIANS);
+	glPopMatrix();
+	
+	// draw house
+	glPushMatrix();
+	glTranslatef(-5, 0, 10);
+	//glScaled(0.5, 0.5, 0.5);
+	model_house.Draw();
+	model_house.scale = villageScale;
+	glPopMatrix();
+
+
+	// draw church
+	church->draw();
+
+	// draw skeletons
+	glPushMatrix();
+	for (Skeleton* skeleton : skeletons) {
+		// Check which of the player and goal is closer to the skeleton
+		// and make the skeleton target that one
+		float distToPlayer = sqrt(pow(skeleton->x - steve->x, 2) + pow(skeleton->z - steve->z, 2));
+		float distToGoal = sqrt(pow(skeleton->x - church->x, 2) + pow(skeleton->z - church->z, 2));
+		if (distToPlayer < distToGoal) {
+			skeleton->target = steve;
+		}
+		else {
+			skeleton->target = church;
+		}
+
+		skeleton->lookAtPlayer();
+		skeleton->draw();
+	}
+	glPopMatrix();
+
+	// reset color
+	//glColor3f(1, 1, 1);
+
+	// draw zombie
+	// draw all zombies in the array
+	glPushMatrix();
+	for (Zombie* zombie : zombies) {
+		// Check which of the player and goal is closer to the zombie
+		// and make the zombie target that one
+		float distToPlayer = sqrt(pow(zombie->x - steve->x, 2) + pow(zombie->z - steve->z, 2));
+		float distToGoal = sqrt(pow(zombie->x - church->x, 2) + pow(zombie->z - church->z, 2));
+		if (distToPlayer < distToGoal) {
+			zombie->target = steve;
+		}
+		else {
+			zombie->target = church;
+		}
+
+		zombie->lookAtPlayer();
+		zombie->draw();
+
+		// prevent enemy from overlapping with each other
+		for (Enemy* enemy : enemies) {
+			if (enemy != zombie) {
+				// check if the enemy is overlapping with another enemy
+				enemy->isOverlapping(zombie);
+			}
+		}
+	}
+	glPopMatrix();
+
+
+	//reset color
+	//colorRGB(255, 255, 255);
+
+	// Hearts
+	drawHearts();
+	
+	 //draw village
+	//glPushMatrix();
+	//glTranslatef(0, -9, 0);
+	//model_village.Draw();
+	//model_village.scale = 0.002;
+	////model_nether.Draw();
+	////model_nether.scale = 0.002;
+	//glPopMatrix();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+
+
+
+
+	// Draw sun as a yellow sphere with yellow material emission. Radius is 20.0f
+	glPushMatrix();
+		/*GLfloat material_Ka[] = { 0.11,0.06, 0.11, 1.00 };
+		GLfloat material_Kd[] = { 0.43, 0.47, 0.54, 1.00 };
+		GLfloat material_Ks[] = { 0.33, 0.33, 0.52, 1.00 };*/
+
+		//GLfloat material_Ke[] = { 250.0f/255.0f, 80 /255.0f, 20/255.0f, 0.0 };
+		//GLfloat material_Ke[] = { 47/255.0f, 63 /255.0f, 77/255.0f, 0.0 };
+		GLfloat material_Ke[] = { lightEmissionColor.x/255.0f, lightEmissionColor.y /255.0f, lightEmissionColor.z /255.0f, 0.0 };
+		//GLfloat material_Ke[] = { 1,1,0, 0.0 };
+		//GLfloat material_Se = 10;
+
+		//glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
+		//glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
+		//glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
+		glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+		//glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
+
+		glTranslatef(lightPos.x, lightPos.y, lightPos.z);
+
+		// Yellow sphere
+		glPushMatrix();
+
+		GLUquadricObj* qobj;
+		qobj = gluNewQuadric();
+		glTranslated(50, 0, 0);
+		glRotated(90, 1, 0, 0);
+		glBindTexture(GL_TEXTURE_2D, tex_moon);
+		gluQuadricTexture(qobj, true);
+		gluQuadricNormals(qobj, GL_SMOOTH);
+		//gluSphere(qobj, 300, 100, 100);
+
+		//colorRGB(250, 203, 20);
+		colorRGB(lightColor.x, lightColor.y, lightColor.z);
+
+		//colorRGB(147, 163, 177);
+		gluSphere(qobj, 10.0f, 100, 100);
+		gluDeleteQuadric(qobj);
+
+
+		glPopMatrix();
+
+		// reset the material
+		GLfloat emissionColor[] = { 0,0,0,0 }; // Specify the emission color (RGBA)
+		glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
+		//glDisable(GL_LIGHTING);
+
+	glPopMatrix();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+
+
+	//sky box
+	glEnable(GL_DEPTH_TEST);
+	glPushMatrix();
+
+	//GLUquadricObj* qobj;
+	qobj = gluNewQuadric();
+	glTranslated(50, 0, 0);
+	glRotated(90, 1, 0, 1);
+	glBindTexture(GL_TEXTURE_2D, tex_sky);
+	gluQuadricTexture(qobj, true);
+	gluQuadricNormals(qobj, GL_SMOOTH);
+	gluSphere(qobj, 300, 100, 100);
+	gluDeleteQuadric(qobj);
+
+
+	glPopMatrix();
+
+
+
+	//enable2D();
+	glDisable(GL_LIGHTING);
+	glDisable(GL_LIGHT0);
+	//glDisable(GL_LIGHT1);
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	//glDepthMask(GL_FALSE);
+	glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0, 1600, 0, 900);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+			glLoadIdentity();
+
+			renderText();
+
+			glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	//glEnable(GL_LIGHT1);
+	glEnable(GL_BLEND);
+	//enable3D();
+
+	// Restore OpenGL states
+	/*glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);*/
+
+	//glutSwapBuffers();
+	glFlush();
+}
+
+void Keyboard(unsigned char key, int x, int y) {
+	float d = 0.01;
+
+	switch (key) {
+	case 'i':
+		camera.moveY(d);
+		break;
+	case 'k':
+		camera.moveY(-d);
+		break;
+	case 'j':
+		camera.moveX(d);
+		break;
+	case 'l':
+		camera.moveX(-d);
+		break;
+	case 'u':
+		camera.moveZ(d);
+		break;
+	case 'o':
+		camera.moveZ(-d);
+		break;
+
+	case GLUT_KEY_ESCAPE:
+		exit(EXIT_SUCCESS);
+	}
+
+	//glutPostRedisplay();
+}
+
+void Special(int key, int x, int y) {
+	float a = 1.0;
+
+	switch (key) {
+	case GLUT_KEY_UP:
+		camera.rotateX(a);
+		break;
+	case GLUT_KEY_DOWN:
+		camera.rotateX(-a);
+		break;
+	case GLUT_KEY_LEFT:
+		if (thirdPerson)
+			//targetAngle += a*2;
+			cameraLeft = true;
+		else
+			camera.rotateY(a);
+		break;
+	case GLUT_KEY_RIGHT:
+		if (thirdPerson)
+			//targetAngle -= a*2;
+			cameraRight = true;
+		else
+			camera.rotateY(-a);
+		break;
+	}
+
+	glutPostRedisplay();
+}
+
+void SpecialUp(int key, int x, int y) {
+	switch (key) {
+	case GLUT_KEY_LEFT:
+		cameraLeft = false;
+		break;
+	case GLUT_KEY_RIGHT:
+		cameraRight = false;
+		break;
+	}
+}
+
+
+
+void CameraKeyboard(unsigned char k, int x, int y) {
+	if (k == '1') {
+		camera.frontView();
+	}
+	if (k == '2') {
+		camera.sideView();
+	}
+	if (k == '3') {
+		camera.topView();
+	}
+	if (k == 'c') {
+		thirdPerson = !thirdPerson;
+	}
+}
+
+void decrementTime(int value)
+{
+	if (timeLeft <= 0)
+	{
+		timeLeft = 0;
+		printf("Game Over\n");
+		hasLost = true;
+		return;
+	}
+	timeLeft -= 1;
+	glutPostRedisplay();
+	glutTimerFunc(1000, decrementTime, 0);
+}
+
+void restartGame() {
+	// reset all the variables
+	//reachedGoal = false;
+	//hasLost = false;
+	//hasWon = false;
+	//timeLeft = maxTime;
+	//textOpacity = 0;
+	//ridingSeesaw = false;
+	//ridingFerrisWheel = false;
+	//lampPostAnimating = false;
+	//lampPostScaleY = 1;
+	//lampPostAngle = 0;
+	//seesawRot = 0;
+	//ferrisWheelRot = 0;
+	steve->x = 2;
+	steve->z = 3.8;
+
+	//glutTimerFunc(0, decrementTime, 0);
+
+}
+void key(unsigned char k, int x, int y)
+{
+
+	//if (k == 'd')
+	//{
+	//	targetSpeed = (steve->x == maxX - playerW / 2) ? 0 : moveSpeed;
+	//	if (!thirdPerson) targetAngle = 0; else playerDir = 270;
+	//}
+	//if (k == 'a')
+	//{
+	//	targetSpeed = (steve->x == minX + playerW / 2) ? 0 : moveSpeed;
+	//	if (!thirdPerson) targetAngle = 180; else playerDir = 90;
+	//}
+	//if (k == 'w')
+	//{
+	//	targetSpeed = (steve->z == maxZ - playerW / 2) ? 0 : moveSpeed;
+	//	if (!thirdPerson) targetAngle = 90; else playerDir = 0;
+	//}
+	//if (k == 's')
+	//{
+	//	targetSpeed = (steve->z == minZ + playerW / 2) ? 0 : moveSpeed;
+	//	if (!thirdPerson) targetAngle = 270; else playerDir = 180;
+	//}
+
+	//// Ride seesaw
+	//if (k == 'f' && withinSeesaw) {
+	//	ridingSeesaw = !ridingSeesaw;
+	//	ridingFerrisWheel = false;
+	//}
+	//// Ride ferris wheel
+	//if (k == 'g' && withinFerrisWheel) {
+	//	ridingFerrisWheel = !ridingFerrisWheel;
+	//	ridingSeesaw = false;
+	//}
+
+	//// Animate Lamppost
+	//if (k == 'z') {
+	//	lampPostAnimating = !lampPostAnimating;
+	//}
+	//// Animate Trashcan
+	//if (k == 'x') {
+	//	trashcanAnimating = !trashcanAnimating;
+	//}
+	//// Animate tree
+	//if (k == 'v') {
+	//	if (animatingTreeTop || animatingTreeMiddle || animatingTreeBottom) {
+	//		animatingTreeTop = false;
+	//		animatingTreeBottom = false;
+	//		animatingTreeMiddle = false;
+	//		treeY = 0;
+	//	}
+	//	else {
+	//		animatingTreeTop = true;
+	//		animatingTreeBottom = false;
+	//		animatingTreeMiddle = false;
+	//	}
+	//}
+
+	////Restart Game
+	//if (k == 'r' && (hasLost || hasWon)) {
+	//	// reset all the variables
+	//	restartGame();
+	//}
+
+	//Keyboard(k, x, y);
+	//CameraKeyboard(k, x, y);
+
+	//glutPostRedisplay();
+}
+
+void keyUp(unsigned char k, int x, int y)
+{
+	// std::cout << "The key released is: " << k << "\n";
+
+	if (k == 'd')
+	{
+		targetSpeed = 0;
+	}
+	if (k == 'a')
+	{
+		targetSpeed = 0;
+	}
+	if (k == 'w')
+	{
+		targetSpeed = 0;
+	}
+	if (k == 's')
+	{
+		targetSpeed = 0;
+	}
+
+	glutPostRedisplay();
+}
+
+
+void animateText(int value)
+{
+	textOpacity += 2.0f;
+	glutPostRedisplay();
+	glutTimerFunc(5, animateText, 0);
+}
+
+// PISTOL ANIMATION
+void pistolRecoil(int value) {
+	int delay = 10;
+	float speed = 0.09f;
+	float maxAngle = 4.0f;
+
+	if (isRightRotation) {
+		if (pistolAnimCurTime < pistolAnimDuration) {
+			float t = pistolAnimCurTime / pistolAnimDuration; // Normalize time
+
+			// Use the ease-in ease-out function to control animation
+			float alpha = easeInOutQuad(t);
+
+			pistolRecoilAngle = maxAngle * (2 * alpha - 1); // Rotates 10° to the left
+			pistolRecoilAngle += maxAngle;
+
+			pistolAnimCurTime += speed; // Adjust this value for animation speed
+			glutPostRedisplay();
+			glutTimerFunc(delay, pistolRecoil, 0);
+		}
+		else {
+			isRightRotation = false;
+			pistolAnimCurTime = 0.0f;
+			glutTimerFunc(delay, pistolRecoil, 0);
+		}
+	}
+	else {
+		if (pistolAnimCurTime < pistolAnimDuration) {
+			float t = pistolAnimCurTime / pistolAnimDuration; // Normalize time
+
+			// Use the ease-in ease-out function to control animation
+			float alpha = easeInOutQuad(t);
+
+			pistolRecoilAngle = -maxAngle * (2 * alpha - 1); // Rotates 10° to the right
+			pistolRecoilAngle += maxAngle;
+
+			pistolAnimCurTime += speed/5.0; // Adjust this value for animation speed
+			glutPostRedisplay();
+			glutTimerFunc(delay, pistolRecoil, 0);
+		}
+		else {
+			isRightRotation = true;
+			pistolAnimCurTime = 0.0f;
+			pistolRecoilAngle = 0.0f;
+
+			isAnimatingPistol = false;
+			return;
+			//glutTimerFunc(delay, pistolRecoil, 0);
+		}
+	}
+}
+
+// animate dragon wings from -10 to 20 degrees using ease in out
+void animateDragonWings(int value) {
+	// animate dragon wings
+	// Range is -10 to 20 degrees
+	// Speed is 10 degrees / second
+	int delay = 100;
+	float speed = 0.12f;
+	float maxAngle = 15.0f;
+
+	if (dragonWingsAnimating) {
+		if (dragonWingsAnimCurTime < dragonWingsAnimDuration) {
+			float t = dragonWingsAnimCurTime / dragonWingsAnimDuration; // Normalize time
+
+			// Use the ease-in ease-out function to control animation
+			float alpha = easeInOutQuad(t);
+
+			dragonWingsAngle = maxAngle * (2 * alpha - 1); // Rotates 10° to the left
+			dragonWingsAngle += maxAngle;
+
+			dragonWingsAnimCurTime += speed; // Adjust this value for animation speed
+			glutPostRedisplay();
+			glutTimerFunc(delay, animateDragonWings, 0);
+		}
+		else {
+			dragonWingsAnimating = false;
+			dragonWingsAnimCurTime = 0.0f;
+			glutTimerFunc(delay, animateDragonWings, 0);
+		}
+	}
+	else {
+		if (dragonWingsAnimCurTime < dragonWingsAnimDuration) {
+			float t = dragonWingsAnimCurTime / dragonWingsAnimDuration; // Normalize time
+
+			// Use the ease-in ease-out function to control animation
+			float alpha = easeInOutQuad(t);
+
+			dragonWingsAngle = -maxAngle * (2 * alpha - 1); // Rotates 10° to the right
+			dragonWingsAngle += maxAngle;
+
+			dragonWingsAnimCurTime += speed / 1.2; // Adjust this value for animation speed
+			glutPostRedisplay();
+			glutTimerFunc(delay, animateDragonWings, 0);
+		}
+		else {
+			dragonWingsAnimating = true;
+			dragonWingsAnimCurTime = 0.0f;
+			dragonWingsAngle = 0.0f;
+			glutTimerFunc(delay, animateDragonWings, 0);
+		}
+	}
+}
+
+
+// timer function to set canShoot to true
+void resetGunCanShoot(int value) {
+	steve->currentWeapon->canShoot = true;
+	glutPostRedisplay();
+}
+
+void startShootingProcedure() {
+	isAnimatingPistol = true;
+	steve->currentWeapon->canShoot = false;
+
+	if (steve->currentWeapon->name == "scar") {
+		// play sound
+		scar_sound->play(true);
+	}
+	else {
+		// play sound
+		//pistol_sound->play(true);
+		pistol_sound->play(true);
+	}
+
+	glutPostRedisplay();
+
+	// According to gun fireRate , set canShoot to false
+	glutTimerFunc( (int)(1000 * steve->currentWeapon->fireRate), resetGunCanShoot, 0);
+
+	// start animation
+	glutTimerFunc(0, pistolRecoil, 0);
+}
+
+//=======================================================================
+// Assets Loading Function
+//=======================================================================
+void LoadAssets()
+{
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~ TEXTURES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	tex_ground.Load("Textures/grass.bmp");
+	tex_path.Load("Textures/path.bmp");
+	//loadBMP(&tex_sky, "Textures/skybox.bmp", true);
+	loadBMP(&tex_sky, "Textures/blu-sky-3.bmp", true);
+	loadBMP(&tex_moon, "Textures/moon.bmp", true);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~ MODELS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	//model_church.Load("Models/village/house/Pueblo.3ds");
+	model_church.Load("Models/village/house/church2.3ds");
+
+	model_house.Load("Models/village/house/house.3ds");
+
+	//model_tree.Load("Models/tree/Tree1.3ds");
+	//model_creeper.Load("Models/creeper/creeper.3ds");
+	//model_sword.Load("Models/sword/sword.3ds");
+
+	//model_pistol.Load("Models/pistol/pistolNew.3ds");
+	model_pistol.Load("Models/pistol/yellow/pistol.3ds");
+	//model_shotgun.Load("Models/shotgun/shotgun.3ds");
+
+
+	//model_torch.Load("Models/torch/torch.3ds");
+	//model_village.Load("Models/village/villageNew/village.3ds");
+
+	//model_village.Load("Models/city/City.3ds");
+
+	//model_nether.Load("Models/nether/nether.3ds");
+
+	model_heart.Load("Models/collectibles/heart.3ds");
+	
+	model_dragon.Load("Models/dragon/dragon2.3ds");
+
+	model_zombie.Load("Models/zombie/zombie.3ds");
+
+	//model_bow.Load("Models/skeleton/bow_attack.3ds");
+	model_bow.Load("Models/skeleton/bow.3ds");
+	model_arrow.Load("Models/skeleton/arrow.3ds");
+
+	model_scar.Load("Models/ak/gun.3ds");
+	model_sniper.Load("Models/sniper/sniper.3ds");
+	
+	model_skeleton.Load("models/skeleton/skeleton.3ds");
+	//model_skeleton.lit = false;
+
+	//print the dragon objects
+	printf("\n\n");
+	printf("Number of objects of skeleton: %d\n", model_skeleton.numObjects);
+	for (int i = 0; i < model_skeleton.numObjects; i++)
+	{
+		printf("Object %d: %s\n", i, model_skeleton.Objects[i].name);
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~ SOUNDS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// Weapon(int _maxAmmo, float _damage, float _fireRate, float _reloadTime, float _accuracy, float _range, Model_3DS _model, float _modelScale);
+	pistol = new Pistol(10, 40, 0.4, 1, 0.9, 10, model_pistol, 0.3);
+	scar = new Scar(30, 20, 0.1, 1, 0.9, 15, model_scar, 0.15);
+	sniper = new Sniper(5, 100, 1.4, 1, 0.9, 30, model_sniper, 0.05);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~ OBJECTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+	wave = new Wave();
+
+	steve = new Player(0.2, "textures/player/steve/");
+	steve->currentWeapon = pistol;
+	steve->HoldGun();
+
+	// Church
+	church = new Goal(0, 0, -40, 10000, model_church, villageScale);
+
+
+	// LOAD SOUNDS
+	pistol_sound = new Sound("sounds/pistol.mp3", false);
+	scar_sound = new Sound("sounds/scar.mp3", false);
+	bg_music = new Sound("sounds/bg.mp3", true);
+
+	// PLAY BG MUSIC
+	//bg_music->play(true);
+
+	// HUD
+	hud = new HUD(screenW, screenH, steve, church, wave);
+
+}
+
+void LoadEnemies() {
+
+	// Start wave 1
+	spawnEnemies();
+
+}
+
+bool isDay = true;
+bool changeDayState = true;
+
+void changeDay(int value) {
+	changeDayState = true;
+	printf("Changing day state\n");
+}
+
+float moonIntensity = 0.001;
+float sunIntensity = 0.7;
+// timer function to decrease them over time to 0.01, then increase again to 0.7.
+void changeIntensity(int value) {
+	if (!changeDayState) {
+		glutTimerFunc(100, changeIntensity, 0);
+		return;
+	}
+	// Day: Intensity 0.7, Color: sunColor, EmissionColor: sunEmissionColor
+	// Night: Intensity 0.01, Color: moonColor, EmissionColor: moonEmissionColor
+	// change intensityX, intensityY, intensityZ, lightColor, lightEmissionColor from day to night values.
+	// they must all reach the end values at the same time.
+
+	// Rate of change in percentage
+	float rate = 0.005f;
+
+	float intensityDiff = moonIntensity - sunIntensity;
+	Vector3f colorDiff = moonColor - sunColor;
+	Vector3f emissionDiff = moonEmissionColor - sunEmissionColor;
+
+	if (isDay) {
+		// Day to night
+		if (intensityX > moonIntensity) {
+			intensityX += rate * intensityDiff;
+			intensityY += rate * intensityDiff;
+			intensityZ += rate * intensityDiff;
+
+			lightColor.x += rate * colorDiff.x;
+			lightColor.y += rate * colorDiff.y;
+			lightColor.z += rate * colorDiff.z;
+
+			lightEmissionColor.x += rate * emissionDiff.x;
+			lightEmissionColor.y += rate * emissionDiff.y;
+			lightEmissionColor.z += rate * emissionDiff.z;
+		}
+		else {
+			isDay = false;
+			changeDayState = false;
+			printf("Night\n");
+			// start timer to change back to day
+			glutTimerFunc(10000, changeDay, 0);
+		}
+	}
+	else {
+		// Night to day
+		if (intensityX < sunIntensity) {
+			intensityX -= rate * intensityDiff;
+			intensityY -= rate * intensityDiff;
+			intensityZ -= rate * intensityDiff;
+
+			lightColor.x -= rate * colorDiff.x;
+			lightColor.y -= rate * colorDiff.y;
+			lightColor.z -= rate * colorDiff.z;
+
+			lightEmissionColor.x -= rate * emissionDiff.x;
+			lightEmissionColor.y -= rate * emissionDiff.y;
+			lightEmissionColor.z -= rate * emissionDiff.z;
+		}
+		else {
+			isDay = true;
+			changeDayState = false;
+			printf("Day\n");
+			// start timer to change back to night
+			glutTimerFunc(10000, changeDay, 0);
+		}
+	}
+
+
+
+	glutPostRedisplay();
+	glutTimerFunc(100, changeIntensity, 0);
+}
+
+
+
+
+void init()
+{
+	glutSetCursor(GLUT_CURSOR_NONE);
+	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	//glutWarpPointer(width / 2, height / 2);
+	glutWarpPointer(screenW / 2, screenH / 2);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	//GLenum err = glewInit();
+
+	//if (GLEW_OK != err)
+	//{
+	//	// Problem: glewInit failed, something is seriously wrong.
+	//	printf("Error: %s\n", glewGetErrorString(err));
+	//}
+
+	//// Initialize glText
+	//if (!gltInit())
+	//{
+	//	printf("Failed to initialize glText\n");
+	//}
+}
+
+void main(int argc, char** argv) {
+	glutInit(&argc, argv);
+	//srand(static_cast<unsigned int>(time(nullptr)));
+
+	glutInitWindowSize(screenW, screenH);
+	glutInitWindowPosition(0, 0);
+
+	glutCreateWindow("ZombieCraft Survival");
+	glutDisplayFunc(Display);
+	glutReshapeFunc(reshape);
+
+	glutTimerFunc(0, animateText, 0);
+
+	// FP
+	glutPassiveMotionFunc(passive_motion);
+	glutMotionFunc(passive_motion);
+	glutTimerFunc(0, timer, 0);    //more info about this is given below at definition of timer()
+	glutKeyboardFunc(keyboardFP);
+	glutKeyboardUpFunc(keyboard_upFP);
+	glutMouseFunc(mouseFP);
+
+	glutTimerFunc(0, changeIntensity, 0);
+	glutTimerFunc(0, animateDragonWings, 0);
+
+	/*glutKeyboardFunc(key);
+	glutKeyboardUpFunc(keyUp);*/
+
+
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+
+	init();
+
+	LoadAssets();
+
+	LoadEnemies();
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	//glEnable(GL_LIGHT1);
+	glEnable(GL_NORMALIZE);
+	glEnable(GL_COLOR_MATERIAL);
+
+	glShadeModel(GL_SMOOTH);
+
+	glutMainLoop();
+}
+
+
+
+/// FIRST PERSON ///
+//#include <GL/glut.h>
+//#include <math.h>
+
+
+
+int main2(int argc, char** argv)
+{
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowSize(width, height);
+	glutCreateWindow("Projectile Motion - 3D Simulation");
+
+	init();
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
+	glutPassiveMotionFunc(passive_motion);
+	glutTimerFunc(0, timer, 0);    //more info about this is given below at definition of timer()
+	glutKeyboardFunc(keyboardFP);
+	glutKeyboardUpFunc(keyboard_upFP);
+
+	glutMainLoop();
+	return 0;
+}
+
+/* This function just draws the scene. I used Texture mapping to draw
+   a chessboard like surface. If this is too complicated for you ,
+   you can just use a simple quadrilateral */
+
+void draw()
+{
+	/*glEnable(GL_TEXTURE_2D);
+	GLuint texture;
+	glGenTextures(1, &texture);
+
+	unsigned char texture_data[2][2][4] =
+	{
+		0,0,0,255,  255,255,255,255,
+		255,255,255,255,    0,0,0,255
+	};
+
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+		GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+		GL_NEAREST);
+
+	glBegin(GL_QUADS);
+
+	glTexCoord2f(0.0, 0.0);  glVertex3f(-50.0, -5.0, -50.0);
+	glTexCoord2f(25.0, 0.0);  glVertex3f(50.0, -5.0, -50.0);
+	glTexCoord2f(25.0, 25.0);  glVertex3f(50.0, -5.0, 50.0);
+	glTexCoord2f(0.0, 25.0);  glVertex3f(-50.0, -5.0, 50.0);
+
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D);*/
+}
+
+void display()
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	cameraFP();
+	draw();
+
+	glutSwapBuffers();
+}
+
+void reshape(int w, int h)
+{
+	/*glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(60, 16.0 / 9.0, 1, 75);
+	glMatrixMode(GL_MODELVIEW);*/
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(60, screenW / screenH, 0.001, 1000);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+}
+
+
+/*this funtion is used to keep calling the display function periodically
+  at a rate of FPS times in one second. The constant FPS is defined above and
+  has the value of 60
+*/
+void timer(int)
+{
+	glutPostRedisplay();
+	if(mouseTrackingEnabled) glutWarpPointer(screenW / 2, screenH / 2);
+	glutTimerFunc(1000 / FPS, timer, 0);
+}
+
+void passive_motion(int x, int y)
+{
+	if(!mouseTrackingEnabled) return;
+
+	float mouseSlowDown = 60.0f;
+	/* two variables to store X and Y coordinates, as observed from the center
+	  of the window
+	*/
+	int dev_x, dev_y;
+	dev_x = (screenW / 2) - x;
+	dev_y = (screenH / 2) - y;
+
+	/* apply the changes to pitch and yaw*/
+	yaw += (float)dev_x / mouseSlowDown;
+	pitch += (float)dev_y / mouseSlowDown;
+
+	if (mouseLeftDown) {
+		shoot();
+	}
+}
+
+
+void cameraFP()
+{
+
+	//print old values
+	//printf("camX: %f, camZ: %f\n", camX, camZ);
+
+	if (motion.Forward)
+	{
+		steve->x += cos((yaw + 90) * TO_RADIANS) * playerSpeed / 100;
+		steve->z -= sin((yaw + 90) * TO_RADIANS) * playerSpeed / 100;
+	}
+	if (motion.Backward)
+	{
+		steve->x += cos((yaw + 90 + 180) * TO_RADIANS) * playerSpeed / 100;
+		steve->z -= sin((yaw + 90 + 180) * TO_RADIANS) * playerSpeed / 100;
+	}
+	if (motion.Left)
+	{
+		steve->x += cos((yaw + 90 + 90) * TO_RADIANS) * playerSpeed / 100;
+		steve->z -= sin((yaw + 90 + 90) * TO_RADIANS) * playerSpeed / 100;
+	}
+	if (motion.Right)
+	{
+		steve->x += cos((yaw + 90 - 90) * TO_RADIANS) * playerSpeed / 100;
+		steve->z -= sin((yaw + 90 - 90) * TO_RADIANS) * playerSpeed / 100;
+	}
+	if (motion.Up)
+	{
+		steve->y += 0.1;
+	}
+	if (motion.Down)
+	{
+		steve->y -= 0.1;
+	}
+
+	//print new values
+	//printf("camX: %f, camZ: %f\n", camX, camZ);
+
+	/*limit the values of pitch
+	  between -60 and 70
+	*/
+	if (pitch >= 70)
+		pitch = 70;
+	if (pitch <= -60)
+		pitch = -60;
+
+
+	if(!thirdPerson)	
+	{
+		//cameraX,Y,Z same as players's
+		cameraX = steve->x;
+		cameraY = steve->y;
+		cameraZ = steve->z;
+		glRotatef(-pitch, 1.0, 0.0, 0.0); // Along X axis
+		glRotatef(-yaw, 0.0, 1.0, 0.0);    //Along Y axis
+		glTranslatef(-cameraX, -cameraY, -cameraZ);
+	}
+	else {
+		// Third Person Camera
+		float xOffset = faceCamera ? 0 : 0.25f; // Adjust this value as needed
+		// Calculate the position to the right of the player
+		centerX = steve->x + xOffset * cos((yaw) * TO_RADIANS);
+		centerY = steve->y; // Adjust for pitch
+		centerZ = steve->z - xOffset * sin((yaw) * TO_RADIANS);
+
+
+		float distanceFromPlayer = mouseRightDown ? 0.4f : 2.5f; // Adjust this distance as needed
+
+		float cameraYaw = faceCamera ? yaw + 180 : yaw;
+		//float cameraPitch = faceCamera ? -pitch : pitch;
+		float cameraPitch = pitch;
+
+		cameraX = centerX - distanceFromPlayer * cos((cameraYaw + 90 ) * TO_RADIANS) * cos(cameraPitch * TO_RADIANS);
+		cameraY = centerY - distanceFromPlayer * sin(cameraPitch * TO_RADIANS);
+		cameraZ = centerZ + distanceFromPlayer * sin((cameraYaw + 90 ) * TO_RADIANS) * cos(cameraPitch * TO_RADIANS);
+
+		// Limit cameraY to be above the ground
+		if (cameraY < 0) {
+			cameraY = 0;
+		}
+
+		/*if (faceCamera) {
+			cameraX = -cameraX;
+			cameraZ = -cameraZ;
+		}*/
+
+		//glLoadIdentity(); // Reset the modelview matrix
+
+		//glLoadIdentity(); // Reset the modelview matrix
+		gluLookAt(
+			cameraX, cameraY, cameraZ,
+			centerX, centerY, centerZ,
+			0.0, 1.0, 0.0);
+	}
+}
+
+void keyboardFP(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	case 'W':
+	case 'w':
+		motion.Forward = true;
+		break;
+	case 'A':
+	case 'a':
+		motion.Left = true;
+		break;
+	case 'S':
+	case 's':
+		motion.Backward = true;
+		break;
+	case 'D':
+	case 'd':
+		motion.Right = true;
+		break;
+
+		// Q and E for up and down
+	case 'Q':
+	case 'q':
+		motion.Up = true;
+		break;
+	case 'E':
+	case 'e':
+		motion.Down = true;
+		break;
+	// Jump
+	case ' ':
+		//motion.Up = true;
+		steve->Jump();
+		break;
+
+	case 'c':
+		thirdPerson = !thirdPerson;
+		break;
+	case 'v' :
+		faceCamera = true;
+		break;
+
+	case '1' :
+		steve->currentWeapon = pistol;
+		steve->HoldGun();
+		break;
+	case '2':
+		steve->currentWeapon = scar;
+		steve->HoldGun();
+		break;
+	case '3':
+		steve->currentWeapon = sniper;
+		steve->HoldGun();
+		break;
+	//case 'g':
+	//	skeletons[0]->shootAtPlayer(steve);
+	//	break;
+
+
+
+	// pause the mouse tracking:
+	case 'p':
+		mouseTrackingEnabled = !mouseTrackingEnabled;
+		break;
+	// esc closes the game
+	case 27:
+		exit(0);
+		break;
+
+	}
+}
+void keyboard_upFP(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	case 'W':
+	case 'w':
+		motion.Forward = false;
+		break;
+	case 'A':
+	case 'a':
+		motion.Left = false;
+		break;
+	case 'S':
+	case 's':
+		motion.Backward = false;
+		break;
+	case 'D':
+	case 'd':
+		motion.Right = false;
+		break;
+	case 'Q':
+	case 'q':
+		motion.Up = false;
+		break;
+	case 'E':
+	case 'e':
+		motion.Down = false;
+		break;
+
+	case 'v':
+		faceCamera = false;
+		break;
+	}
+}
+
+void mouseFP(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON)
+	{ 
+		if (state == GLUT_DOWN)
+		{
+			mouseLeftDown = true;
+			//do something if left mouse is clicked
+
+			shoot();
+		}
+		else if (state == GLUT_UP)
+		{
+			//do something if left mouse is released
+			mouseLeftDown = false;
+		}
+	}
+	if (button == GLUT_RIGHT_BUTTON)
+	{
+		if (state == GLUT_DOWN)
+		{
+			//do something if right mouse is clicked
+			mouseRightDown = true;
+			pistolRot = 0;
+			pistolX = -0.0125;
+			playerSpeed = aimSpeed;
+
+		}
+		else if (state == GLUT_UP)
+		{
+			//do something if right mouse is released
+			mouseRightDown = false;
+			pistolRot = 10;
+			pistolX = pistolXOrig + steve->currentWeapon->xOffset / 5;
+			playerSpeed = runSpeed;
+		}
+	}
+}
+
+std::vector<Enemy*> enemiesToDelete;
+
+void shoot() {
+	// Shoot
+	if (steve->currentWeapon->canShoot) {
+		startShootingProcedure();
+
+		// Sort zombies by nearest to player using Euclidean distance
+		std::sort(enemies.begin(), enemies.end(), [&](Enemy* a, Enemy* b) {
+			float distA = sqrt(pow(a->x - steve->x, 2) + pow(a->z - steve->z, 2) + pow(a->y - steve->y, 2));
+			float distB = sqrt(pow(b->x - steve->x, 2) + pow(b->z - steve->z, 2) + pow(b->y - steve->y, 2));
+
+			return distA < distB;
+			});
+
+		for (Enemy* enemy : enemies) {
+			Vector3f B1 = enemy->B1();
+			Vector3f B2 = enemy->B2();
+
+			// L1: camera coords
+			Vector3f L1 = Vector3f(cameraX, cameraY, cameraZ);
+
+			// L2: point 10 units in front of camera along the camera's direction using (yaw, pitch)
+			float range = steve->currentWeapon->range;
+			//float yawOffset = thirdPerson ? 8 : 0;
+
+			Vector3f L2;
+			if (!thirdPerson)
+			{
+				L2 = Vector3f(cameraX + range * cos((yaw + 90) * TO_RADIANS) * cos(pitch * TO_RADIANS),
+					cameraY + range * sin(pitch * TO_RADIANS),
+					cameraZ - range * sin((yaw + 90) * TO_RADIANS) * cos(pitch * TO_RADIANS));
+			}
+			else {
+				// the direction is from the camera to the centerX, centerY, centerZ
+				// calculate the yaw and pitch between the camera and the center
+				float dx = centerX - cameraX;
+				float dy = centerY - cameraY;
+				float dz = centerZ - cameraZ;
+
+				float yawTP = -(atan2(dz, dx) * TO_DEGREES - 270);
+				float pitchTP = atan2(dy, sqrt(dx * dx + dz * dz)) * TO_DEGREES;
+
+				L2 = Vector3f(cameraX + range * cos((yawTP + 90) * TO_RADIANS) * cos(pitchTP * TO_RADIANS),
+					cameraY + range * sin(pitchTP * TO_RADIANS),
+					cameraZ - range * sin((yawTP + 90) * TO_RADIANS) * cos(pitchTP * TO_RADIANS));
+			}
+
+			Vector3f hitPoint = Vector3f(0, 0, 0);
+			bool hit = CheckLineBox(B1, B2, L1, L2, hitPoint);
+
+			if (hit) {
+				// Red Color
+				glColor3f(1, 0, 0);
+
+				int dmg = steve->currentWeapon->damage;
+
+				bool died;
+
+				if (hitPoint.y > B2.y - 0.2) {
+					printf("Hit head!\n");
+					// red
+					//colorRGB(255, 0, 0);
+					//print3D(enemy->x, enemy->y + 1.5, enemy->z, "25", enemy->rotY);
+					died = enemy->hit(dmg * 2, true);
+
+				}
+				else {
+					printf("Hit!\n");
+					//print3D(enemy->x, enemy->y + 2.5, enemy->z, "25", enemy->rotY);
+					died = enemy->hit(dmg, false);
+
+					//printf("Hit Point: (%f, %f, %f)\n", hitPoint.x, hitPoint.y, hitPoint.z);
+				}
+				// Reset color
+				glColor3f(1, 1, 1);
+
+				printf("Hit Point: (%f, %f, %f)\n", hitPoint.x, hitPoint.y, hitPoint.z);
+				//isAnimatingPistol = true;
+
+				if (died) {
+					// add to enemiesToDelete
+					enemiesToDelete.push_back(enemy);
+
+					// place heart at the enemy's position
+					// it should have a 50% chance of dropping a heart
+					int randNum = rand() % 10;
+					if (randNum < 5)
+						hearts.push_back(Vector3f(enemy->x, enemy->y, enemy->z));
+				}
+
+				// dont hit any more zombies
+				if(steve->currentWeapon->name != "sniper") break;
+				else {
+				}
+			}
+			else {
+				//printf("Miss!\n");
+			}
+		}
+
+		// Erase enemies after the loop
+		for (Enemy* enemy : enemiesToDelete) {
+			// remove from enemies array
+			enemies.erase(std::remove(enemies.begin(), enemies.end(), enemy), enemies.end());
+
+			// remove from zombies array
+			if (std::find(zombies.begin(), zombies.end(), enemy) != zombies.end()) {
+				zombies.erase(std::remove(zombies.begin(), zombies.end(), enemy), zombies.end());
+
+				// cast to zombie
+				Zombie* zombie = (Zombie*)enemy;
+				Zombie::zombieInstances.erase(zombie->instanceID);
+			}
+			// remove from skeletons array
+			else if (std::find(skeletons.begin(), skeletons.end(), enemy) != skeletons.end()) {
+				skeletons.erase(std::remove(skeletons.begin(), skeletons.end(), enemy), skeletons.end());
+
+				// cast to skeleton
+				Skeleton* skeleton = (Skeleton*)enemy;
+				Skeleton::skeletonInstances.erase(skeleton->instanceID);
+			}
+
+			delete enemy;
+		}
+
+		// Check if all enemies are dead
+		if (enemies.size() == 0) {
+			printf("All enemies dead!\n");
+			printf("Wave %d complete!\n", wave->waveNumber);
+
+			// Start next wave
+			wave->waveOver();
+
+			spawnEnemies();
+		}
+
+		// Clear the temporary vector
+		enemiesToDelete.clear();
+	}
+}
+
+void spawnEnemies() {
+	// spawn a zombie every 5 seconds
+	// numZombies and numSkeletons from wave
+	// distance from church from wave
+	// spawn them at random angle around the church within a certain distance
+
+	for (int i = 0; i < wave->numZombies; i++) {
+		// Z range: 30 to 45
+		// X range: -60 to 60
+		float x = rand() % 120 - 60;
+		float z = rand() % 15 + 30;
+
+		// Spawn zombie
+		Zombie* zombie = new Zombie(x, 0.45, z, 0, 150, model_zombie, church);
+		zombies.push_back(zombie);
+		enemies.push_back(zombie);
+	}
+
+	for (int i = 0; i < wave->numSkeletons; i++) {
+		// Z range: 30 to 45
+		// X range: -60 to 60
+		float x = rand() % 120 - 60;
+		float z = rand() % 15 + 30;
+
+		Model_3DS model_skeleton2;
+		model_skeleton2.Load("models/skeleton/skeleton.3ds");
+
+		// Spawn skeleton
+		Skeleton* skeleton = new Skeleton(x, 0.45, z, 0, 150, model_skeleton2, model_bow, model_arrow, church);
+		skeletons.push_back(skeleton);
+		enemies.push_back(skeleton);
+	}
+}
+

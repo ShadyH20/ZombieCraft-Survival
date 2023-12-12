@@ -1,0 +1,4 @@
+﻿  HUD.cpp
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\hud\HUD.cpp(84,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\hud\HUD.cpp(127,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  OpenGL3DTemplate.vcxproj -> C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Debug\OpenGL3DTemplate.exe
