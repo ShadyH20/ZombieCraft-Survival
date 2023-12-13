@@ -23,7 +23,7 @@ public:
     virtual ~Enemy() = default;
 
     virtual void lookAtPlayer() = 0;
-    virtual void draw() = 0;
+    virtual void draw(bool shouldMove) = 0;
     virtual bool hit(int dmg, bool headShot) = 0;
 
     virtual Vector3f B1() = 0;

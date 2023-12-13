@@ -15,6 +15,8 @@ Goal::Goal(float x, float y, float z, int _maxHp, Model_3DS _model, float _model
     model.scale = modelScale;
 
     isPlayer = false;
+
+    //hit(200000);
 }
 
 Goal::~Goal() {
@@ -35,6 +37,7 @@ void Goal::hit(int damage) {
     if (hp < 0) {
         hp = 0;
         // Game Over
+        isDestroyed = true;
     }
 
     printf("Goal hp: %d\n", hp);

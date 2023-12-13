@@ -51,3 +51,9 @@ void Sound::stop()
 {
 	BASS_ChannelStop(channel);
 }
+
+// set volume
+void Sound::setVolume(float volume)
+{
+	BASS_ChannelSetAttribute(channel, BASS_ATTRIB_VOL, volume);
+}

@@ -21,6 +21,8 @@ public:
 
     void draw();
     void goalHP();
+    void reviveCountdown();
+    void drawSquareTexture(GLTexture texture, int x, int y, int w, int h);
 
     HUD(int _screenW, int _screenH, Player* _player, Goal* _goal, Wave* _wave);
     ~HUD();

@@ -153,6 +153,39 @@ void print(int x, int y, char* string, float scale)
 	glPopMatrix();
 }
 
+void printStroke(int x, int y, char* string, float scale, float lineWidth)
+{
+	int len, i;
+
+	// Save the current model-view matrix
+	glPushMatrix();
+
+	// Scale the text using the provided scale factor
+	glScalef(scale, scale, 1.0);
+
+	// Set the position of the scaled text in the window using the x and y coordinates
+	glTranslatef(x / scale, y / scale, 0);
+
+	// get the length of the string to display
+	len = (int)strlen(string);
+
+	glLineWidth(lineWidth);
+
+	// loop to display character by character
+	for (i = 0; i < len; i++)
+	{
+		// choose a font from those available in windows fonts
+		/*glutBitmapCharacter(
+			GLUT_BITMAP_TIMES_ROMAN_24
+			, string[i]);*/
+		//glutStrokeWidth(GLUT_STROKE_ROMAN, string[i]);
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, string[i]);
+	}
+
+	// Restore the model-view matrix
+	glPopMatrix();
+}
+
 void print3D(float x, float y, float z, char* string, float rot)
 {
 	int len, i;

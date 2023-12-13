@@ -19,6 +19,8 @@ public:
 
 	bool isPlayer;
 
+	bool isDestroyed = false;
+
 	Goal(float x, float y, float z, int _maxHp, Model_3DS _model, float _modelScale);
 	virtual ~Goal();
 	void draw();

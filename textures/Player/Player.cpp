@@ -26,32 +26,50 @@ Player::Player(float size, const std::string& texturePath)
     boxCollider(size, 3.5f * size, size), currentWeapon(nullptr)
 {
     isPlayer = true;
+    width = 2 * size;
+    height = 3.5f * size;
+    depth = size;
+
+    //x = -20.0f;
+    z = -20.0f;
+
 
     instance = this;
 
     damageSound = new Sound("sounds/damage.mp3", true);
+    damageSound->setVolume(0.3f);
     
     glutTimerFunc(0, playerTimer, 0);
+
+    //Test
+    //hit(500);
 }
 
 //move
-void Player::Move() {
+void Player::Move(bool allowJump) {
 
-    // Update the player's y position based on the y velocity
-    y += yVel;
+    if(allowJump)
+    {
+        if (!isDead)
+        {
+            // Update the player's y position based on the y velocity
+            y += yVel;
 
-    // Update the player's y velocity based on gravity
-    yVel += gravity;
+            // Update the player's y velocity based on gravity
+            yVel += gravity;
+        }
 
-    //Check if the player is on the ground
-    // If the player is on the ground, allow them to jump
-    if (y <= yOffset) {
-		y = yOffset;
-		yVel = 0.0f;
-        canJump = true;
-    } else {
-        canJump = false;
-	}
+        //Check if the player is on the ground
+        // If the player is on the ground, allow them to jump
+        if (y <= yOffset) {
+            y = yOffset;
+            yVel = 0.0f;
+            canJump = true;
+        }
+        else {
+            canJump = false;
+        }
+    }
 
 
 	// Move the player's body
@@ -68,7 +86,7 @@ void Player::Jump() {
 }
 
 
-void Player::Draw(bool thirdPerson, Model_3DS gun, float pistolRecoilAngle) {
+void Player::Draw(bool thirdPerson, bool holdingGun, float pistolRecoilAngle) {
     //float gunScale = 0.3f;
     glPushMatrix(); // Player
         glColor3f(color.x, color.y, color.z);
@@ -135,7 +153,7 @@ void Player::Draw(bool thirdPerson, Model_3DS gun, float pistolRecoilAngle) {
                         glRotatef(currentWeapon->zRot, 0.0f, 0.0f, 1.0f);
                         /*currentWeapon->model.scale = 0.3;
                         gun.scale = gunScale;*/
-                        currentWeapon->model.Draw();
+                        if(holdingGun) currentWeapon->model.Draw();
 
                     glPopMatrix(); // Right Arm Draw
                 glPopMatrix(); // Right Arm
@@ -167,7 +185,7 @@ void Player::Draw(bool thirdPerson, Model_3DS gun, float pistolRecoilAngle) {
                     //    //leftArm.GetHeight()/2,
                     //    0,
                     //    0.0f);
-                    glRotatef(-leftLegRotX, 1.0f, 0.0f, 0.0f);
+                    glRotatef(holdingGun ? -leftLegRotX : rightLegRotX, 1.0f, 0.0f, 0.0f);
                     glPushMatrix(); // Right Leg Draw
                         glTranslatef(0.0f, -rightLeg.GetHeight() / 2, 0.0f);
                         rightLeg.Draw();
@@ -202,6 +220,15 @@ void Player::HoldGun() {
         rightArmRotX = 85;
         rightArmRotY = 30;
     }
+}
+
+void Player::UnholdGun() {
+	currentWeapon->canShoot = false;
+	// rotate both arms infront of the player
+	leftArmRotX = 180;
+	leftArmRotY = 0;
+	rightArmRotX = 180;
+	rightArmRotY = 0;
 }
 
 //void Player::hit() {
@@ -288,7 +315,13 @@ void Player::hit(int damage) {
     hp -= damage;
     if (hp <= 0) {
 		hp = 0;
-		// Game over
+
+        // Player dies
+        isDead = true;
+        y = 5;
+
+        reviveCountdownTime = reviveTime;
+        glutTimerFunc(1000, reviveCountdown, 0);
 	}
 
     // Play damage sound
@@ -305,6 +338,28 @@ void Player::heal(int amount) {
 		hp = maxHp;
 	}
 }
+
+void Player::reviveCountdown(int value) {
+    instance->reviveCountdownTime -= 1000;
+    if (instance->reviveCountdownTime <= 0) {
+		instance->revivePlayer(0);
+	}
+    else {
+		glutTimerFunc(1000, reviveCountdown, 0);
+	}
+};
+
+void Player::revivePlayer(int value) {
+	instance->isDead = false;
+	instance->hp = instance->maxHp;
+	instance->color = Vector3f(1, 1, 1);
+
+    instance->x = 0;
+    instance->y = instance->yOffset;
+    instance->z = -20;
+
+	glutPostRedisplay();  // Request a redraw to update the color
+};
 
 void Player::resetColorCallback(int instanceID) {
         instance->color = Vector3f(1, 1, 1);

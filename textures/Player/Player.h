@@ -63,6 +63,10 @@ public:
 
     bool isMoving = false;
 
+    int reviveTime = 12000;
+    int reviveCountdownTime;
+    bool isDead = false;
+
     Weapon* currentWeapon;
 
     // HP
@@ -71,15 +75,18 @@ public:
 
     Player(float size, const std::string& texturePath);
 
-    void Draw(bool thirdPerson, Model_3DS gun, float pistolRecoilAngle);
+    void Draw(bool thirdPerson, bool holdingGun, float pistolRecoilAngle);
     void Look(float yaw, float pitch);
     void HoldGun();
-    void Move();
+    void UnholdGun();
+    void Move(bool allowJump);
     void Jump();
 
     //timer function
     static void playerTimer(int value);
     static void resetColorCallback(int value);
+    static void revivePlayer(int value);
+    static void reviveCountdown(int value);
 
     bool CheckCollisionWithArrow(float arrowX, float arrowY, float arrowZ, float arrowYaw, float arrowPitch) override;
     void hit(int damage) override;

@@ -11,7 +11,7 @@ std::unordered_map<int, Weapon*> HUD::inventory = std::unordered_map<int, Weapon
 
 
 void drawSquareTexture(GLTexture texture, int x, int y, int w, int h);
-void printText(int x, int y, char* string);
+void printText(int x, int y, char* string, float scale, float lineWidth);
 
 HUD::HUD(int _screenW, int _screenH, Player* _player, Goal* _goal, Wave* _wave) {
 	player = _player;
@@ -86,7 +86,7 @@ void HUD::goalHP() {
 	// black
 	glColor3f(0, 0, 0);
 
-	printText(screenW / 2 - 50, screenH - 30, (char*)p0s);
+	printText(screenW / 2 - 50, screenH - 30, (char*)p0s, 0.2, 2.5);
 
 	// Creating text
 	//GLTtext* text = gltCreateText();
@@ -105,6 +105,28 @@ void HUD::goalHP() {
 	// Reset color
 	glColor3f(1, 1, 1);
 
+
+}
+
+void HUD::reviveCountdown() {
+	// Draw "Will respawn in" in the center of the screen
+	char* p0s[20];
+	sprintf((char*)p0s, "Will respawn in");
+
+	// white
+	glColor3f(1, 1, 1);
+	printText(screenW / 2 - 90, screenH / 2 + 30, (char*)p0s, 0.2, 3);
+
+	// Draw revive countdown
+	//p0s[20];
+	sprintf((char*)p0s, "%i", player->reviveCountdownTime / 1000 - 1);
+
+	// white
+	glColor3f(1, 1, 1);
+	printText(screenW / 2 - 10, screenH / 2 - 10, (char*)p0s, 0.2, 3);
+
+	// Creating text
+	//
 
 }
 
@@ -128,7 +150,7 @@ void HUD::draw() {
 
 	//// white
 	glColor3f(1, 1, 1);
-	printText(screenW / 2 - heartSize, heartY + heartSize + 10, (char*)p0s);
+	printText(screenW / 2 - heartSize, heartY + heartSize + 10, (char*)p0s, 0.15, 3);
 
 	// Creating text
 	//GLTtext* text = gltCreateText();
@@ -147,6 +169,9 @@ void HUD::draw() {
 
 	// Goal HP bar
 	goalHP();
+
+	// Revive countdown
+	if(player->isDead) reviveCountdown();
 
 	// Draw hearts
 	//they will be a 2d square with a gltexture2d
@@ -176,10 +201,10 @@ void HUD::draw() {
 		}
 	}
 
-	//glDisable(GL_TEXTURE_2D);
+	glDisable(GL_TEXTURE_2D);
 }
 
-void drawSquareTexture(GLTexture texture, int x, int y, int w, int h) {
+void HUD::drawSquareTexture(GLTexture texture, int x, int y, int w, int h) {
 	//glEnable(GL_TEXTURE_2D);
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
@@ -197,27 +222,33 @@ void drawSquareTexture(GLTexture texture, int x, int y, int w, int h) {
 	//glDisable(GL_TEXTURE_2D);
 }
 
-void printText(int x, int y, char* string)
+void printText(int x, int y, char* string, float scale, float lineWidth)
 {
-	//printf("printing text\n");
 	int len, i;
 
 	// Save the current model-view matrix
 	glPushMatrix();
 
+	// Scale the text using the provided scale factor
+	glScalef(scale, scale, 1.0);
+
 	// Set the position of the scaled text in the window using the x and y coordinates
-	glRasterPos2f(x, y);
+	glTranslatef(x / scale, y / scale, 0);
 
 	// get the length of the string to display
 	len = (int)strlen(string);
+
+	glLineWidth(lineWidth);
 
 	// loop to display character by character
 	for (i = 0; i < len; i++)
 	{
 		// choose a font from those available in windows fonts
-		glutBitmapCharacter(
+		/*glutBitmapCharacter(
 			GLUT_BITMAP_TIMES_ROMAN_24
-			, string[i]);
+			, string[i]);*/
+			//glutStrokeWidth(GLUT_STROKE_ROMAN, string[i]);
+		glutStrokeCharacter(GLUT_STROKE_ROMAN, string[i]);
 	}
 
 	// Restore the model-view matrix

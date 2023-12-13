@@ -44,7 +44,7 @@ public:
 	;
 	~Zombie() {};
 
-	void draw() override {
+	void draw(bool shouldMove) override {
 		// draw zombie
 		glPushMatrix();
 			glTranslatef(x, y, z);
@@ -105,34 +105,36 @@ public:
 		}
 
 
-		// Move zombie towards player. Stop when within 1 unit of player
-		float dx = target->x - x;
-		float dz = target->z - z;
+		if (shouldMove) {
+			// Move zombie towards player. Stop when within 1 unit of player
+			float dx = target->x - x;
+			float dz = target->z - z;
 
-		float dist = sqrt(dx * dx + dz * dz);
+			float dist = sqrt(dx * dx + dz * dz);
 
-		if (!collidingWithTarget && dist > 0.8) {
-			// random number between 0 and 1 to randomize motion a bit
-			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			r = r * 2 - 1;
+			if (!collidingWithTarget && dist > 0.8) {
+				// random number between 0 and 1 to randomize motion a bit
+				float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+				r = r * 2 - 1;
 
-			// Normalize dx and dz
-			dx /= dist;
-			dz /= dist;
+				// Normalize dx and dz
+				dx /= dist;
+				dz /= dist;
 
-			x += 0.008 * dx;
-			z += 0.008 * dz;
+				x += 0.008 * dx;
+				z += 0.008 * dz;
 
-			x += r * 0.0005;
-			z += r * 0.0005;
-		}
-		else {
-			// Hit player
-			if(canHitPlayer)
-			{
-				target->hit(50);
-				canHitPlayer = false;
-				glutTimerFunc(1500, resetCanHitPlayerCallback, instanceID);
+				x += r * 0.0005;
+				z += r * 0.0005;
+			}
+			else {
+				// Hit player
+				if (canHitPlayer)
+				{
+					target->hit(50);
+					canHitPlayer = false;
+					glutTimerFunc(1500, resetCanHitPlayerCallback, instanceID);
+				}
 			}
 		}
 	};

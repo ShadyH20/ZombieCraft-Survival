@@ -65,6 +65,7 @@ public:
 		if (arrow_shot_sound == nullptr) {
 			printf("Loading arrow shot sound\n");
 			arrow_shot_sound = new Sound("sounds/arrow_shot.mp3", false);
+			arrow_shot_sound->setVolume(0.3);
 		}
 
 		// Calculate armHeight
@@ -101,7 +102,7 @@ public:
 	;
 	~Skeleton() {};
 
-	void draw() override {
+	void draw(bool shouldMove) override {
 
 		// draw skeleton
 		glPushMatrix();
@@ -182,35 +183,37 @@ public:
 
 
 
-		// Move skeleton towards player. Stop when within 6 units of player
-		float dx = target->x - x;
-		float dz = target->z - z;
+		if (shouldMove) {
+			// Move skeleton towards player. Stop when within 6 units of player
+			float dx = target->x - x;
+			float dz = target->z - z;
 
-		float dist = sqrt(dx * dx + dz * dz);
+			float dist = sqrt(dx * dx + dz * dz);
 
-		if (dist > 8) {
-			// random number between 0 and 1 to randomize motion a bit
-			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			r = r * 2 - 1;
+			if (dist > 8) {
+				// random number between 0 and 1 to randomize motion a bit
+				/*float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+				r = r * 2 - 1;*/
 
-			// Normalize dx and dz
-			dx /= dist;
-			dz /= dist;
+				// Normalize dx and dz
+				dx /= dist;
+				dz /= dist;
 
-			x += 0.007 * dx;
-			z += 0.007 * dz;
+				x += 0.007 * dx;
+				z += 0.007 * dz;
 
-			x += r * 0.005;
-			z += r * 0.005;
-		}
-		else {
-			// random motion
-			/*float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+				/*x += r * 0.005;
+				z += r * 0.005;*/
+			}
+			else {
+				// random motion
+				/*float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
-			r = r * 2 - 1;
+				r = r * 2 - 1;
 
-			x += r * 0.0008;
-			z += r * 0.0008;*/
+				x += r * 0.0008;
+				z += r * 0.0008;*/
+			}
 		}
 	};
 
@@ -226,18 +229,18 @@ public:
 	void holdBow() {
 		// shift the object up by half of the difference between min and max y
 		float shiftY = armHeight / 2;
-		model.Objects[0].pos.y += shiftY;
+		model.Objects[0].pos.y = shiftY;
 
 		// shift the object right
-		model.Objects[0].pos.x += shiftY;
+		model.Objects[0].pos.x = shiftY;
 
 		rightArmVRot = -90;
 		model.Objects[0].rot.z = rightArmVRot;
 
 		// same for object 1
-		model.Objects[1].pos.y += shiftY;
-		model.Objects[1].pos.x += shiftY * 0.5;
-		model.Objects[1].pos.z += shiftY * 0.25;
+		model.Objects[1].pos.y = shiftY;
+		model.Objects[1].pos.x = shiftY * 0.5;
+		model.Objects[1].pos.z = shiftY * 0.25;
 
 		leftArmVRot = -90;
 		leftArmHRot = 45;

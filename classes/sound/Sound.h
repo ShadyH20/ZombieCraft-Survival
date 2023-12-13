@@ -9,10 +9,9 @@ public:
 
 	void play();
 	void play(bool fromStart);
-
 	void pause();
-
 	void stop();
+	void setVolume(float volume);
 
 private:
 	unsigned int channel;
