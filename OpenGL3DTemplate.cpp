@@ -76,7 +76,9 @@ void keyboardFP(unsigned char key, int x, int y);
 void keyboard_upFP(unsigned char key, int x, int y);
 void mouseFP(int button, int state, int x, int y);
 void shoot();
-void reloadWeapon();
+void reloadWeapon(int value);
+void reload();
+void reload();
 void spawnEnemies();
 void drawHouses();
 void LoadEnemies();
@@ -509,31 +511,25 @@ void setupLights() {
 void renderText() {
 	glColor3f(0, 0, 0);
 
-	printStroke(screenW/2 - 7, screenH/2, "+", 0.15, 1.5);
+	printStroke(screenW / 2 - 7, screenH / 2, "+", 0.15, 1.5);
 
 
 	// If isPortalOpen write "Enter the portal" in the middle of the screen
 	if (isPortalOpen) {
 		char* p0s[30];
-		sprintf((char*)p0s, "Enter the portal");
-		float opacity = (sin(textOpacity * 0.5 * 3.1415 / 180) + 1) / 2;
+		sprintf((char)p0s, "Enter the portal");
+		float opacity = (sin(textOpacity 0.5 * 3.1415 / 180) + 1) / 2;
 		colorRGBA(255, 0, 255, opacity);
-		printStroke(screenW / 2 - 180, screenH / 2, (char*)p0s, 0.28, 3.5);
+		printStroke(screenW / 2 - 180, screenH / 2, (char)p0s, 0.28, 3.5);
 	}
-	
+
 	// If isReloading write "Reloading" in the middle of the screen
-	if (steve->currentWeapon->isReloading) {
-		char* p0s[30];
-		sprintf((char*)p0s, "Reloading");
+	if (steve->currentWeapon->isReloading && steve->currentWeapon->totalAmmo > 0) {
+		char p0s[30];
+		sprintf((char)p0s, "Reloading");
 		float opacity = 1;
 		colorRGBA(255, 255, 255, opacity);
-		printStroke(screenW / 2 - 180, screenH / 2, (char*)p0s, 0.28, 3.5);
-		// Draw Reload countdown
-		sprintf((char*)p0s, "%i", 2);
-
-		// white
-		glColor3f(1, 1, 1);
-		printStroke(screenW / 2 - 10, screenH / 2 - 10, (char*)p0s, 0.2, 3);
+		printStroke(screenW / 2 - 80, screenH / 2 - 20, (char)p0s, 0.28, 3.5);
 	}
 
 	//drawTime(screenW, screenH, timeLeft);
@@ -542,23 +538,23 @@ void renderText() {
 
 
 	glPushMatrix();
-		// Reset color
-		glColor3f(1, 1, 1);
+	// Reset color
+	glColor3f(1, 1, 1);
 
-		// HUD
-		hud->draw();
+	// HUD
+	hud->draw();
 
-		// Write score top left
-		char* scoreText[20];
-		sprintf((char*)scoreText, "SCORE %i", score);
-		printStroke(30, screenH - 50, (char*)scoreText, 0.15, 2);
+	// Write score top left
+	char* scoreText[20];
+	sprintf((char)scoreText, "SCORE %i", score);
+	printStroke(30, screenH - 50, (char)scoreText, 0.15, 2);
 
 	glPopMatrix();
 
 
 	// Reset color
 	glColor3f(1, 1, 1);
-	
+
 
 	//enable3D();
 }
@@ -2226,22 +2222,21 @@ void resetGunCanShoot(int value) {
 	glutPostRedisplay();
 }
 
-void reloadWeapon(int value){
-	if (steve->currentWeapon->totalAmmo <= 0) {
+
+void reloadWeapon(int value) {
+	if (steve->currentWeapon->totalAmmo <= 0 && steve->currentWeapon->ammo <= 0) {
 		steve->currentWeapon->canShoot = false;
 	}
-	else{
-		if (steve->currentWeapon->totalAmmo < steve->currentWeapon->maxAmmo)
-		{
-			steve->currentWeapon->totalAmmo -= steve->currentWeapon->totalAmmo;
-			steve->currentWeapon->ammo += steve->currentWeapon->totalAmmo;
+	else {
+		int minimum = (steve->currentWeapon->maxAmmo - steve->currentWeapon->ammo);
+		if (steve->currentWeapon->totalAmmo < minimum) {
+			minimum = steve->currentWeapon->totalAmmo;
 		}
-		else {
-		steve->currentWeapon->totalAmmo -= steve->currentWeapon->maxAmmo;
-		steve->currentWeapon->ammo += steve->currentWeapon->maxAmmo;
-		}
-	steve->currentWeapon->isReloading = false;
-	steve->currentWeapon->canShoot = true;
+		steve->currentWeapon->totalAmmo -= minimum;
+		steve->currentWeapon->ammo += minimum;
+
+		steve->currentWeapon->isReloading = false;
+		steve->currentWeapon->canShoot = true;
 	}
 }
 
@@ -3014,6 +3009,18 @@ void keyboardFP(unsigned char key, int x, int y)
 			glutPostRedisplay();
 			printf("Restarting game\n");
 		}
+		else {
+			steve->currentWeapon->canShoot = false;
+			steve->currentWeapon->isReloading = true;
+			float delay = 0;
+
+			if (!(steve->currentWeapon->totalAmmo <= 0)) {
+				delay = (int)(1000 * steve->currentWeapon->reloadTime);
+			}
+
+			printf("DELAY %f", delay);
+			glutTimerFunc(delay, reloadWeapon, 0);
+		}
 		break;
 
 	}
@@ -3094,19 +3101,24 @@ void mouseFP(int button, int state, int x, int y)
 
 std::vector<Enemy*> enemiesToDelete;
 
+void reload()
+{
+	steve->currentWeapon->canShoot = false;
+	steve->currentWeapon->isReloading = true;
+	glutTimerFunc((int)(1000 * steve->currentWeapon->reloadTime), reloadWeapon, 0);
+}
+
 void shoot() {
 	if (steve->isDead) return;
 	// Shoot
 	if (steve->currentWeapon->canShoot) {
-		if ((steve->currentWeapon->ammo > 0 ))
+		if ((steve->currentWeapon->ammo > 1 ))
 		{
-			startShootingProcedure();
 			steve->currentWeapon->ammo--;
+			startShootingProcedure();
 		}
 		else {
-			steve->currentWeapon->canShoot = false;
-			steve->currentWeapon->isReloading = true;
-			glutTimerFunc((int)(1000 * steve->currentWeapon->reloadTime), reloadWeapon, 0);
+			reload();
 		}
 		// Sort zombies by nearest to player using Euclidean distance
 		std::sort(enemies.begin(), enemies.end(), [&](Enemy* a, Enemy* b) {
@@ -3190,6 +3202,9 @@ void shoot() {
 					int randNum = rand() % 10;
 					if (randNum < 5)
 						hearts.push_back(Vector3f(enemy->x, enemy->y, enemy->z));
+					int randNum = rand() % 10;
+					if (randNum < 5)
+						ammos.push_back(Vector3f(enemy->x, enemy->y, enemy->z));
 				}
 
 				// dont hit any more zombies
