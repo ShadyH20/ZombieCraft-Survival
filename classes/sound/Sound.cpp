@@ -18,7 +18,13 @@ Sound::Sound(const char * filename, bool loop)
 		audio_device = true;
 	}
 
-	channel = BASS_StreamCreateFile(false,filename, 0,0, loop && BASS_SAMPLE_LOOP);
+	if (loop) {
+		channel = BASS_StreamCreateFile(false,filename, 0,0, BASS_SAMPLE_LOOP);
+	}
+	else
+	{
+		channel = BASS_StreamCreateFile(false, filename, 0, 0, NULL);
+	}
 
 	if(!channel)
 	{

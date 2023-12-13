@@ -1,45 +1,18 @@
-﻿  Enemy.cpp
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Enemy.cpp(85,12): warning C4305: '+=': truncation from 'double' to 'float'
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Enemy.cpp(89,12): warning C4305: '-=': truncation from 'double' to 'float'
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Enemy.cpp(96,12): warning C4305: '+=': truncation from 'double' to 'float'
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Enemy.cpp(100,12): warning C4305: '-=': truncation from 'double' to 'float'
-  OpenGL3DTemplate.cpp
+﻿  OpenGL3DTemplate.cpp
 C:\Users\shady\GUC\Semester 7\Graphics\Project3D\utilities.hpp(230,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   (compiling source file 'OpenGL3DTemplate.cpp')
   
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\enemy\Zombie.h(159,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\enemy\Zombie.h(165,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   (compiling source file 'OpenGL3DTemplate.cpp')
   
 C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\enemy\Skeleton.h(340,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   (compiling source file 'OpenGL3DTemplate.cpp')
   
 C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(516,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(557,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(679,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(699,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(1386,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(1390,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  HUD.cpp
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\hud\HUD.cpp(84,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\hud\HUD.cpp(114,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\hud\HUD.cpp(122,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\classes\hud\HUD.cpp(149,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  Sound.cpp
-  Pistol.cpp
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Vector3f.h(33,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file 'classes/weapon/pistol/Pistol.cpp')
-  
-  Scar.cpp
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Vector3f.h(33,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file 'classes/weapon/scar/Scar.cpp')
-  
-  Sniper.cpp
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Vector3f.h(33,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file 'classes/weapon/sniper/Sniper.cpp')
-  
-  Player.cpp
-C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Vector3f.h(33,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file 'textures/Player/Player.cpp')
-  
-  Generating Code...
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(536,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(578,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(700,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(720,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(1844,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\shady\GUC\Semester 7\Graphics\Project3D\OpenGL3DTemplate.cpp(1848,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   OpenGL3DTemplate.vcxproj -> C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Debug\OpenGL3DTemplate.exe

@@ -29,9 +29,13 @@ public:
 
 	bool canHitPlayer = true;
 
-	Zombie(float _x, float _y, float _z, float _rotY, int _maxHp , Model_3DS _model, Goal* _player)
+	Model_3DS model2;
+	bool inNether = false;
+
+	Zombie(float _x, float _y, float _z, float _rotY, int _maxHp , Model_3DS _model, Model_3DS _model2, Goal* _player)
 		: Enemy(_x, _y, _z, _rotY, _maxHp, _model, _player)
 	{
+		model2 = _model2;
 		// Generate a unique ID for each instance
 		instanceID = rand();  // You may want to use a more sophisticated method for generating IDs
 
@@ -45,6 +49,7 @@ public:
 	~Zombie() {};
 
 	void draw(bool shouldMove) override {
+		y = inNether ? 0 : 0.45;
 		// draw zombie
 		glPushMatrix();
 			glTranslatef(x, y, z);
@@ -62,7 +67,8 @@ public:
 			// color
 			glColor3f(color.x, color.y, color.z);
 
-			model.Draw();
+			if (!inNether) model.Draw();
+			else model2.Draw();
 		//model_zombie.scale = 0.1;
 		glPopMatrix();
 
@@ -73,7 +79,7 @@ public:
 		// print3d 
 		if (justHit) print3D(
 			x - 0.05 * cos(rotY * TO_RADIANS),
-			y + 0.5,
+			inNether ? y + 0.95 : y + 0.5,
 			z,
 			damageText, 0);
 		// reset color
@@ -220,10 +226,16 @@ public:
 	}
 
     Vector3f B1() override {
+		if (inNether) {
+			return Vector3f(x - 0.1, y, z - 0.1);
+		}
 		return Vector3f(x - 0.1, y - 0.4, z - 0.1);
 	};
 
     Vector3f B2() override {
+		if (inNether) {
+			return Vector3f(x + 0.1, y + 0.8, z + 0.1);
+		}
 		return Vector3f(x + 0.1, y + 0.4, z + 0.1);
 	};
 

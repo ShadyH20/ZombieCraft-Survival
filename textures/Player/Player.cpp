@@ -36,7 +36,7 @@ Player::Player(float size, const std::string& texturePath)
 
     instance = this;
 
-    damageSound = new Sound("sounds/damage.mp3", true);
+    damageSound = new Sound("sounds/damage.mp3", false);
     damageSound->setVolume(0.3f);
     
     glutTimerFunc(0, playerTimer, 0);

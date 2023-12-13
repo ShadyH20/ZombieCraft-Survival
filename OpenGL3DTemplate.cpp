@@ -178,6 +178,8 @@ Vector3f moonEmissionColor = Vector3f(47, 63, 77);
 
 int score = 0;
 
+bool isPortalOpen = false;
+
 // Wave
 Wave* wave;
 
@@ -233,9 +235,17 @@ Model_3DS model_arrow;
 Model_3DS model_skeleton;
 Model_3DS model_villa;
 Model_3DS model_heart;
-Model_3DS model_nether;
 Model_3DS model_mountain;
 Model_3DS model_portal;
+
+// Nether Models
+Model_3DS model_nether;
+Model_3DS model_piglin;
+Model_3DS model_nether_ground;
+Model_3DS model_lava_pit;
+Model_3DS model_nether_roof;
+Model_3DS model_nether_wall;
+Model_3DS model_nether_stone;
 
 float villageScale = 0.5;
 
@@ -499,6 +509,16 @@ void renderText() {
 
 	printStroke(screenW/2 - 7, screenH/2, "+", 0.15, 1.5);
 
+
+	// If isPortalOpen write "Enter the portal" in the middle of the screen
+	if (isPortalOpen) {
+		char* p0s[30];
+		sprintf((char*)p0s, "Enter the portal");
+		float opacity = (sin(textOpacity * 0.5 * 3.1415 / 180) + 1) / 2;
+		colorRGBA(255, 0, 255, opacity);
+		printStroke(screenW / 2 - 180, screenH / 2, (char*)p0s, 0.28, 3.5);
+	}
+
 	//drawTime(screenW, screenH, timeLeft);
 
 	//printStroke(screenW / 2 - 30, 300, "Ammo: 36 / 98", 1);
@@ -517,6 +537,7 @@ void renderText() {
 		printStroke(30, screenH - 50, (char*)scoreText, 0.15, 2);
 
 	glPopMatrix();
+
 
 	// Reset color
 	glColor3f(1, 1, 1);
@@ -710,8 +731,6 @@ void drawHearts() {
 		}
 	}
 }
-
-bool isPortalOpen = true;
 
 void MenuScreen() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -950,19 +969,7 @@ void MenuScreen() {
 	glFlush();
 }
 
-void Display() {
-	if (gameState == "menu") {
-		MenuScreen();
-		return;
-	}
-	else if (gameState == "gameover") {
-		//gameState = "gameover";
-		GameOverScreen();
-		return;
-	}
-
-	//enable3D();
-
+void VillageLevel() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	//setupCamera();
@@ -996,7 +1003,7 @@ void Display() {
 	////glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
 
 	GLfloat emissionColor[] = { 0,0,0,0 };
-	if(!steve->isDead){
+	if (!steve->isDead) {
 		glPushMatrix();
 		// enable light 1
 		glEnable(GL_LIGHT1);
@@ -1012,12 +1019,7 @@ void Display() {
 
 		////glPushMatrix();
 		////glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
-
-		//////cube
-		////glTranslatef(0, 0.05, 0);
-		////glScalef(0.03, 0.03, 0.03);
-		//////glutSolidCube(1);
-
+		
 		////// reset the material
 		glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
 		////glDisable(GL_LIGHTING);
@@ -1031,39 +1033,39 @@ void Display() {
 
 	// DRAW STEVE
 	glPushMatrix();
-		steve->isMoving = motion.Forward || motion.Backward || motion.Left || motion.Right;
-		steve->Move(true);
+	steve->isMoving = motion.Forward || motion.Backward || motion.Left || motion.Right;
+	steve->Move(true);
 
-		glPushMatrix();
-			if (!thirdPerson)
-			{
-				glRotatef(yaw, 0, 1, 0);
-				glRotatef(pitch, 1, 0, 0);
-				glRotatef(pistolRot, 0, 1, 0);
+	glPushMatrix();
+	if (!thirdPerson)
+	{
+		glRotatef(yaw, 0, 1, 0);
+		glRotatef(pitch, 1, 0, 0);
+		glRotatef(pistolRot, 0, 1, 0);
 
-				//float offset = steve->currentWeapon->xOffset;
-				glTranslatef((pistolX) * 1.3, -0.05, -0.15);
-			}
+		//float offset = steve->currentWeapon->xOffset;
+		glTranslatef((pistolX) * 1.3, -0.05, -0.15);
+	}
 
-			if (thirdPerson) 
-			{
-				if (faceCamera) {
-					glRotatef(yaw, 0, 1, 0);
-				}
-				else {
-					float extraRot = mouseRightDown? 15 : 10;
-					glRotatef(yaw - extraRot, 0, 1, 0);
-				}
-			}
+	if (thirdPerson)
+	{
+		if (faceCamera) {
+			glRotatef(yaw, 0, 1, 0);
+		}
+		else {
+			float extraRot = mouseRightDown ? 15 : 10;
+			glRotatef(yaw - extraRot, 0, 1, 0);
+		}
+	}
 
-			steve->Look(yaw, (thirdPerson && faceCamera) ? -pitch : pitch);
+	steve->Look(yaw, (thirdPerson && faceCamera) ? -pitch : pitch);
 
-			// Draw Steve (if not dead)
-			if(!steve->isDead) 
-			{
-				steve->Draw(thirdPerson, true, pistolRecoilAngle);
-			}
-		glPopMatrix();
+	// Draw Steve (if not dead)
+	if (!steve->isDead)
+	{
+		steve->Draw(thirdPerson, true, pistolRecoilAngle);
+	}
+	glPopMatrix();
 
 	glPopMatrix();
 
@@ -1088,16 +1090,13 @@ void Display() {
 	model_dragon.Objects[2].rot.z = 0;*/
 
 	// objects 1 and 2 are the wings
-	// they are each 0.5 units away from the center of the dragon
-	// their rotation is about the center of the dragon
-	// so we need to translate them to compensate for the rotation
 	model_dragon.Objects[1].pos.x = -1.5 * sin(dragonWingsAngle * TO_RADIANS);
 	model_dragon.Objects[1].pos.y = 1 * sin(dragonWingsAngle * TO_RADIANS);
 
 	model_dragon.Objects[2].pos.x = 1.5 * sin(dragonWingsAngle * TO_RADIANS);
 	model_dragon.Objects[2].pos.y = 1 * sin(dragonWingsAngle * TO_RADIANS);
 	glPopMatrix();
-	
+
 	// draw houses
 	drawHouses();
 
@@ -1118,7 +1117,7 @@ void Display() {
 	model_mountain.Draw();
 	model_mountain.scale = villageScale;
 	glPopMatrix();
-	
+
 	// mountain behind
 	glPushMatrix();
 	glTranslatef(-50, -1.5, -35);
@@ -1143,7 +1142,7 @@ void Display() {
 	model_portal.scale = 0.35;
 	glPopMatrix();
 
-	model_portal.Objects[3].pos.y = 0;
+	model_portal.Objects[3].pos.y = isPortalOpen ? 0 : -10;
 
 	// draw skeletons
 	glPushMatrix();
@@ -1195,23 +1194,13 @@ void Display() {
 	}
 	glPopMatrix();
 
-
 	//reset color
 	//colorRGB(255, 255, 255);
 
 	// Hearts
 	drawHearts();
-	
-	 //draw village
-	//glPushMatrix();
-	//glTranslatef(0, -9, 0);
-	//model_village.Draw();
-	//model_village.scale = 0.002;
-	////model_nether.Draw();
-	////model_nether.scale = 0.002;
-	//glPopMatrix();
 
-	// Reset color
+   // Reset color
 	glColor3f(1, 1, 1);
 
 
@@ -1219,49 +1208,49 @@ void Display() {
 
 	// Draw sun as a yellow sphere with yellow material emission. Radius is 20.0f
 	glPushMatrix();
-		/*GLfloat material_Ka[] = { 0.11,0.06, 0.11, 1.00 };
-		GLfloat material_Kd[] = { 0.43, 0.47, 0.54, 1.00 };
-		GLfloat material_Ks[] = { 0.33, 0.33, 0.52, 1.00 };*/
+	/*GLfloat material_Ka[] = { 0.11,0.06, 0.11, 1.00 };
+	GLfloat material_Kd[] = { 0.43, 0.47, 0.54, 1.00 };
+	GLfloat material_Ks[] = { 0.33, 0.33, 0.52, 1.00 };*/
 
-		//GLfloat material_Ke[] = { 250.0f/255.0f, 80 /255.0f, 20/255.0f, 0.0 };
-		//GLfloat material_Ke[] = { 47/255.0f, 63 /255.0f, 77/255.0f, 0.0 };
-		GLfloat material_Ke[] = { lightEmissionColor.x/255.0f, lightEmissionColor.y /255.0f, lightEmissionColor.z /255.0f, 0.0 };
-		//GLfloat material_Ke[] = { 1,1,0, 0.0 };
-		//GLfloat material_Se = 10;
+	//GLfloat material_Ke[] = { 250.0f/255.0f, 80 /255.0f, 20/255.0f, 0.0 };
+	//GLfloat material_Ke[] = { 47/255.0f, 63 /255.0f, 77/255.0f, 0.0 };
+	GLfloat material_Ke[] = { lightEmissionColor.x / 255.0f, lightEmissionColor.y / 255.0f, lightEmissionColor.z / 255.0f, 0.0 };
+	//GLfloat material_Ke[] = { 1,1,0, 0.0 };
+	//GLfloat material_Se = 10;
 
-		//glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
-		//glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
-		//glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
-		glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
-		//glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
+	//glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
+	//glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
+	//glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
+	glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+	//glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
 
-		glTranslatef(lightPos.x, lightPos.y, lightPos.z);
+	glTranslatef(lightPos.x, lightPos.y, lightPos.z);
 
-		// Yellow sphere
-		glPushMatrix();
+	// Yellow sphere
+	glPushMatrix();
 
-		GLUquadricObj* qobj;
-		qobj = gluNewQuadric();
-		glTranslated(50, 0, 0);
-		glRotated(90, 1, 0, 0);
-		glBindTexture(GL_TEXTURE_2D, tex_moon);
-		gluQuadricTexture(qobj, true);
-		gluQuadricNormals(qobj, GL_SMOOTH);
-		//gluSphere(qobj, 300, 100, 100);
+	GLUquadricObj* qobj;
+	qobj = gluNewQuadric();
+	glTranslated(50, 0, 0);
+	glRotated(90, 1, 0, 0);
+	glBindTexture(GL_TEXTURE_2D, tex_moon);
+	gluQuadricTexture(qobj, true);
+	gluQuadricNormals(qobj, GL_SMOOTH);
+	//gluSphere(qobj, 300, 100, 100);
 
-		//colorRGB(250, 203, 20);
-		colorRGB(lightColor.x, lightColor.y, lightColor.z);
+	//colorRGB(250, 203, 20);
+	colorRGB(lightColor.x, lightColor.y, lightColor.z);
 
-		//colorRGB(147, 163, 177);
-		gluSphere(qobj, 10.0f, 100, 100);
-		gluDeleteQuadric(qobj);
+	//colorRGB(147, 163, 177);
+	gluSphere(qobj, 10.0f, 100, 100);
+	gluDeleteQuadric(qobj);
 
 
-		glPopMatrix();
+	glPopMatrix();
 
-		// reset the material
-		glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
-		//glDisable(GL_LIGHTING);
+	// reset the material
+	glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
+	//glDisable(GL_LIGHTING);
 
 	glPopMatrix();
 
@@ -1296,31 +1285,495 @@ void Display() {
 	glMatrixMode(GL_PROJECTION);
 	//glDepthMask(GL_FALSE);
 	glPushMatrix();
-		glLoadIdentity();
-		gluOrtho2D(0, 1600, 0, 900);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-			glLoadIdentity();
+	glLoadIdentity();
+	gluOrtho2D(0, 1600, 0, 900);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
 
-			renderText();
+	renderText();
 
-			glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	//glEnable(GL_LIGHT1);
 	glEnable(GL_BLEND);
-	//enable3D();
-
-	// Restore OpenGL states
-	/*glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);*/
-
-	//glutSwapBuffers();
 	glFlush();
+}
+
+void NetherLevel() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	//setupCamera();
+	cameraFP();
+	setupLights();
+
+	// (100, 15, 19)
+	bgColorRGB(100, 15, 19, 1);
+
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+
+	// Ground
+	//RenderGroundNether();
+
+	//// Draw torch Model
+	//GLfloat emissionColor[] = { 0,0,0,0 }; // Specify the emission color (RGBA)
+
+	//glPushMatrix();
+	//GLfloat material_Ka[] = { 0.11,0.06, 0.11, 1.00 };
+	//GLfloat material_Kd[] = { 0.43, 0.47, 0.54, 1.00 };
+	////GLfloat material_Ks[] = { 0.33, 0.33, 0.52, 1.00 };
+	//GLfloat material_Ks[] = { 1,1,1, 1.00 };
+	GLfloat torchEm[] = { 1.0, 1.0, 0.2, 0.00 };
+	//GLfloat material_Se = 10;
+
+	////glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
+	////glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
+	////glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
+	////glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+	////glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
+
+	GLfloat emissionColor[] = { 0,0,0,0 };
+	if (!steve->isDead) {
+		glPushMatrix();
+		// enable light 1
+		glEnable(GL_LIGHT1);
+
+		glMaterialfv(GL_FRONT, GL_EMISSION, torchEm);
+
+		glTranslatef(torchPos.x, torchPos.y, torchPos.z);
+		//glScalef(.10,.10,.1);
+		//glRotatef(90.f, 0, 0, 1);
+
+		model_torch.Draw();
+		model_torch.scale = 0.1;
+
+		////glPushMatrix();
+		////glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+
+		////// reset the material
+		glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
+		////glDisable(GL_LIGHTING);
+		////glPopMatrix();
+
+		glPopMatrix();
+	}
+
+	//glPopMatrix();
+
+
+	// DRAW STEVE
+	glPushMatrix();
+	steve->isMoving = motion.Forward || motion.Backward || motion.Left || motion.Right;
+	steve->Move(true);
+
+	glPushMatrix();
+	if (!thirdPerson)
+	{
+		glRotatef(yaw, 0, 1, 0);
+		glRotatef(pitch, 1, 0, 0);
+		glRotatef(pistolRot, 0, 1, 0);
+
+		//float offset = steve->currentWeapon->xOffset;
+		glTranslatef((pistolX) * 1.3, -0.05, -0.15);
+	}
+
+	if (thirdPerson)
+	{
+		if (faceCamera) {
+			glRotatef(yaw, 0, 1, 0);
+		}
+		else {
+			float extraRot = mouseRightDown ? 15 : 10;
+			glRotatef(yaw - extraRot, 0, 1, 0);
+		}
+	}
+
+	steve->Look(yaw, (thirdPerson && faceCamera) ? -pitch : pitch);
+
+	// Draw Steve (if not dead)
+	if (!steve->isDead)
+	{
+		steve->Draw(thirdPerson, true, pistolRecoilAngle);
+	}
+	glPopMatrix();
+
+	glPopMatrix();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+
+
+
+	// draw dragon
+	glPushMatrix();
+	glTranslatef(5, 8.0, 2);
+	//glScaled(0.5, 0.5, 0.5);
+	model_dragon.Draw();
+	model_dragon.scale = 1;
+
+	//float dragRot = dragonWingsAngle
+
+	// set z rotation of objects 1 and 2
+	model_dragon.Objects[1].rot.z = 5 - dragonWingsAngle;
+	model_dragon.Objects[2].rot.z = -5 + dragonWingsAngle;
+	/*model_dragon.Objects[1].rot.z = -0;
+	model_dragon.Objects[2].rot.z = 0;*/
+
+	// objects 1 and 2 are the wings
+	model_dragon.Objects[1].pos.x = -1.5 * sin(dragonWingsAngle * TO_RADIANS);
+	model_dragon.Objects[1].pos.y = 1 * sin(dragonWingsAngle * TO_RADIANS);
+
+	model_dragon.Objects[2].pos.x = 1.5 * sin(dragonWingsAngle * TO_RADIANS);
+	model_dragon.Objects[2].pos.y = 1 * sin(dragonWingsAngle * TO_RADIANS);
+	glPopMatrix();
+
+	// draw houses
+	drawHouses();
+
+
+	/////////////
+	// TERRAIN //
+	/////////////
+
+	//////////////////////////// GROUND ////////////////////////////
+	// draw nether ground
+	glPushMatrix();
+	glTranslatef(0, 0.01, 39.5);
+	model_nether_ground.Draw();
+	model_nether_ground.scale = villageScale;
+	glPopMatrix();
+	
+	glPushMatrix();
+	glTranslatef(0, 0.01, -30);
+	model_nether_ground.Draw();
+	model_nether_ground.scale = villageScale;
+	glPopMatrix();
+
+	//////////////////////////// ROOF ////////////////////////////
+	// draw nether ground
+	glPushMatrix();
+	glTranslatef(0, 11, 39.5);
+	glRotatef(180, 1, 0, 0);
+	model_nether_ground.Draw();
+	model_nether_ground.scale = villageScale;
+	glPopMatrix();
+	
+	glPushMatrix();
+	glTranslatef(0, 11, -30);
+	glRotatef(180, 1, 0, 0);
+	model_nether_ground.Draw();
+	model_nether_ground.scale = villageScale;
+	glPopMatrix();
+
+	// draw lava pit
+	//glPushMatrix();
+	//glTranslatef(0, 0.05, 50);
+	//model_lava_pit.Draw();
+	//model_lava_pit.scale = villageScale;
+	//glPopMatrix();
+
+	//// mountain at - 30 x
+	//glPushMatrix();
+	//glTranslatef(25, 0, -50);
+	//glRotatef(90, 0, 1, 0);
+	////glScaled(0.5, 0.5, 0.5);
+	//model_nether_wall.Draw();
+	//model_nether_wall.scale = villageScale;
+	//glPopMatrix();
+
+
+	////////////////
+	// RIGHT SIDE //
+	////////////////
+
+	// mountain at - 30 x
+	glPushMatrix();
+	glTranslatef(-20, -0.5, -32);
+	glRotatef(-90, 0, 1, 0);
+	//glScaled(0.5, 0.5, 0.5);
+	model_nether_wall.Draw();
+	model_nether_wall.scale = villageScale;
+	glPopMatrix();
+	
+	// mountain at - 30 x
+	glPushMatrix();
+	glTranslatef(-20, -0.5, 10);
+	glRotatef(-90, 0, 1, 0);
+	//glScaled(0.5, 0.5, 0.5);
+	model_nether_wall.Draw();
+	model_nether_wall.scale = villageScale;
+	glPopMatrix();
+
+	/////////////////////////////////////////////////
+	// 
+	////////////////
+	// LEFT SIDE //
+	////////////////
+
+	// mountain at - 30 x
+	glPushMatrix();
+	glTranslatef(20, -0.5, -32);
+	glRotatef(90, 0, 1, 0);
+	//glScaled(0.5, 0.5, 0.5);
+	model_nether_wall.Draw();
+	model_nether_wall.scale = villageScale;
+	glPopMatrix();
+	
+	// mountain at - 30 x
+	glPushMatrix();
+	glTranslatef(20, -0.5, 10);
+	glRotatef(90, 0, 1, 0);
+	//glScaled(0.5, 0.5, 0.5);
+	model_nether_wall.Draw();
+	model_nether_wall.scale = villageScale;
+	glPopMatrix();
+
+	/////////////////////////////////////////////////
+
+	// mountain behind left
+	glPushMatrix();
+	glTranslatef(-15, -0.5, -35);
+	glRotatef(180, 0, 1, 0);
+	//glScaled(0.5, 0.5, 0.5);
+	model_nether_wall.Draw();
+	model_nether_wall.scale = villageScale;
+	glPopMatrix();
+
+	// mountain behind right
+	glPushMatrix();
+	glTranslatef(27, -0.5, -35);
+	glRotatef(180, 0, 1, 0);
+	//glScaled(0.5, 0.5, 0.5);
+	model_nether_wall.Draw();
+	model_nether_wall.scale = villageScale;
+	glPopMatrix();
+
+
+	// draw church
+	church->draw();
+	if (church->isDestroyed) {
+		gameState = "gameover";
+	}
+
+	// draw portal
+	glPushMatrix();
+	glTranslatef(0, 0, 0);
+	//glRotatef(90, 0, 1, 0);
+	model_portal.Draw();
+	model_portal.scale = 0.35;
+	glPopMatrix();
+
+	model_portal.Objects[3].pos.y = isPortalOpen ? 0 : -10;
+
+	// draw skeletons
+	glPushMatrix();
+	for (Skeleton* skeleton : skeletons) {
+		// Check which of the player and goal is closer to the skeleton
+		// and make the skeleton target that one
+		float distToPlayer = sqrt(pow(skeleton->x - steve->x, 2) + pow(skeleton->z - steve->z, 2));
+		float distToGoal = sqrt(pow(skeleton->x - church->x, 2) + pow(skeleton->z - church->z, 2));
+		if (!steve->isDead && distToPlayer < distToGoal) {
+			skeleton->target = steve;
+		}
+		else {
+			skeleton->target = church;
+		}
+
+		skeleton->lookAtPlayer();
+		skeleton->draw(true);
+	}
+	glPopMatrix();
+
+	// reset color
+	//glColor3f(1, 1, 1);
+
+	// draw zombie
+	// draw all zombies in the array
+	glPushMatrix();
+	for (Zombie* zombie : zombies) {
+		// Check which of the player and goal is closer to the zombie
+		// and make the zombie target that one
+		float distToPlayer = sqrt(pow(zombie->x - steve->x, 2) + pow(zombie->z - steve->z, 2));
+		float distToGoal = sqrt(pow(zombie->x - church->x, 2) + pow(zombie->z - church->z, 2));
+		if (!steve->isDead && distToPlayer < distToGoal) {
+			zombie->target = steve;
+		}
+		else {
+			zombie->target = church;
+		}
+
+		zombie->lookAtPlayer();
+		zombie->draw(true);
+
+		// prevent enemy from overlapping with each other
+		for (Enemy* enemy : enemies) {
+			if (enemy != zombie) {
+				// check if the enemy is overlapping with another enemy
+				enemy->isOverlapping(zombie);
+			}
+		}
+	}
+	glPopMatrix();
+
+	
+
+	//reset color
+	//colorRGB(255, 255, 255);
+
+	// Hearts
+	drawHearts();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+
+
+
+
+	//// Draw sun as a yellow sphere with yellow material emission. Radius is 20.0f
+	//glPushMatrix();
+	///*GLfloat material_Ka[] = { 0.11,0.06, 0.11, 1.00 };
+	//GLfloat material_Kd[] = { 0.43, 0.47, 0.54, 1.00 };
+	//GLfloat material_Ks[] = { 0.33, 0.33, 0.52, 1.00 };*/
+
+	////GLfloat material_Ke[] = { 250.0f/255.0f, 80 /255.0f, 20/255.0f, 0.0 };
+	////GLfloat material_Ke[] = { 47/255.0f, 63 /255.0f, 77/255.0f, 0.0 };
+	//GLfloat material_Ke[] = { lightEmissionColor.x / 255.0f, lightEmissionColor.y / 255.0f, lightEmissionColor.z / 255.0f, 0.0 };
+	////GLfloat material_Ke[] = { 1,1,0, 0.0 };
+	////GLfloat material_Se = 10;
+
+	////glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
+	////glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
+	////glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
+	//glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
+	////glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
+
+	//glTranslatef(lightPos.x, lightPos.y, lightPos.z);
+
+	//// Yellow sphere
+	//glPushMatrix();
+
+	GLUquadricObj* qobj;
+	//qobj = gluNewQuadric();
+	//glTranslated(50, 0, 0);
+	//glRotated(90, 1, 0, 0);
+	//glBindTexture(GL_TEXTURE_2D, tex_moon);
+	//gluQuadricTexture(qobj, true);
+	//gluQuadricNormals(qobj, GL_SMOOTH);
+	////gluSphere(qobj, 300, 100, 100);
+
+	////colorRGB(250, 203, 20);
+	//colorRGB(lightColor.x, lightColor.y, lightColor.z);
+
+	////colorRGB(147, 163, 177);
+	//gluSphere(qobj, 10.0f, 100, 100);
+	//gluDeleteQuadric(qobj);
+
+
+	//glPopMatrix();
+
+	//// reset the material
+	//glMaterialfv(GL_FRONT, GL_EMISSION, emissionColor);
+	////glDisable(GL_LIGHTING);
+
+	//glPopMatrix();
+
+	// Reset color
+	glColor3f(1, 1, 1);
+
+
+	////sky box
+	glEnable(GL_DEPTH_TEST);
+	glPushMatrix();
+
+
+
+	//GLUquadricObj* qobj;
+	qobj = gluNewQuadric();
+	glTranslated(50, 0, 0);
+	glRotated(45, 1, 0, 1);
+	glBindTexture(GL_TEXTURE_2D, tex_sky);
+	gluQuadricTexture(qobj, true);
+
+	// color : (63, 27, 25)
+	//colorRGB(63, 27, 25);
+
+	gluQuadricNormals(qobj, GL_SMOOTH);
+	gluSphere(qobj, 300, 100, 100);
+	gluDeleteQuadric(qobj);
+
+
+	glPopMatrix();
+
+	// red sphere with radius 250
+	glPushMatrix();
+
+	qobj = gluNewQuadric();
+	glTranslatef(50, 0, 0);
+	//glRotatef(90, 0, 1, 0);
+	colorRGB(156, 44, 41);
+	gluSphere(qobj, 250, 100, 100);
+	glPopMatrix();
+
+
+
+
+	//enable2D();
+	glDisable(GL_LIGHTING);
+	glDisable(GL_LIGHT0);
+	//glDisable(GL_LIGHT1);
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	//glDepthMask(GL_FALSE);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0, 1600, 0, 900);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	renderText();
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	//glEnable(GL_LIGHT1);
+	glEnable(GL_BLEND);
+	glFlush();
+}
+
+void Display() {
+	if (gameState == "menu") {
+		MenuScreen();
+		return;
+	}
+	else if (gameState == "gameover") {
+		//gameState = "gameover";
+		GameOverScreen();
+		return;
+	}
+	else if (gameState == "village") {
+		//gameState = "gameover";
+		VillageLevel();
+		return;
+	}
+	else if (gameState == "nether") {
+		//gameState = "gameover";
+		NetherLevel();
+		return;
+	}
+
+	
 }
 
 // Houses
@@ -1342,6 +1795,7 @@ float houseRotations[] = {
 };
 void drawHouses() {
 	model_house.scale = villageScale;
+	model_nether_stone.scale = 0.2;
 
 	// array of Vector3f for house positions
 	// array of float for house rotations
@@ -1351,7 +1805,11 @@ void drawHouses() {
 		glPushMatrix();
 			glTranslatef(housePositions[i].x, housePositions[i].y, housePositions[i].z);
 			glRotatef(houseRotations[i], 0, 1, 0);
-			model_house.Draw();
+			if(gameState == "village")
+				model_house.Draw();
+			else if (gameState == "nether")
+				model_nether_stone.Draw();
+			//model_house.Draw();
 
 			// draw cube with scaled x and z
 			//glPushMatrix();
@@ -1536,7 +1994,7 @@ void startGame() {
 	// Enemies
 	LoadEnemies();
 
-	gameState = "game";
+	gameState = "village";
 }
 void key(unsigned char k, int x, int y)
 {
@@ -1800,6 +2258,12 @@ void LoadAssets()
 
 	model_mountain.Load("Models/village/house/mountain.3ds");
 
+	model_nether_ground.Load("Models/nether/netherGround.3ds");
+	model_lava_pit.Load("Models/nether/lavaPit.3ds");
+	model_nether_roof.Load("Models/nether/netherRoof.3ds");
+	model_nether_wall.Load("Models/nether/netherWall.3ds");
+	model_nether_stone.Load("Models/nether/netherStone.3ds");
+
 	//model_tree.Load("Models/tree/Tree1.3ds");
 	//model_creeper.Load("Models/creeper/creeper.3ds");
 	//model_sword.Load("Models/sword/sword.3ds");
@@ -1821,6 +2285,9 @@ void LoadAssets()
 	model_dragon.Load("Models/dragon/dragon2.3ds");
 
 	model_zombie.Load("Models/zombie/zombie.3ds");
+	model_piglin.Load("Models/piglin/piglin.3ds");
+	model_piglin.scale = 0.65;
+	model_piglin.rot.y = -90;
 
 	//model_bow.Load("Models/skeleton/bow_attack.3ds");
 	model_bow.Load("Models/skeleton/bow.3ds");
@@ -2043,6 +2510,8 @@ void main(int argc, char** argv) {
 	glutMainLoop();
 }
 
+
+bool inPortal = false;
 void playerCollisions() {
 	// Check if player is within boundaries
 	if (steve->x > maxX - steve->width / 2) {
@@ -2057,6 +2526,43 @@ void playerCollisions() {
 	if (steve->z < minZ + steve->width / 2) {
 		steve->z = minZ + steve->width / 2;
 	}
+
+	if(isPortalOpen) {
+	//if(true) {
+		// Check if player is colliding with portal at (0,0,0)
+		float portalW = 1;
+		float portalL = 3;
+
+		if (steve->x > -portalL / 2 && steve->x < portalL / 2 && steve->z > -portalW / 2 && steve->z < portalW / 2) {
+			//printf("Reached portal\n");
+			//reachedGoal = true;
+			//hasWon = true;
+			//return;
+			inPortal = true;
+		}
+		else {
+			if (inPortal) {
+				printf("Left portal\n");
+				inPortal = false;
+				isPortalOpen = false;
+				if (gameState == "village") {
+					gameState = "nether";
+				}
+				else if (gameState == "nether") {
+					gameState = "village";
+				}
+
+				spawnEnemies();
+
+				//// Loop on all zombies and set their "isNether" to true if gameState is nether
+				//for (int i = 0; i < zombies.size(); i++) {
+				//	zombies[i]->inNether = (gameState == "nether");
+				//}
+
+			}
+		}
+	}
+
 }
 
 
@@ -2187,8 +2693,8 @@ void passive_motion(int x, int y)
 bool isCollidingWithHouses(float dx, float dz) {
 	//float offset = 0.65;
 
-	float houseW = 4;
-	float houseL = 4.8;
+	float houseW = gameState == "nether" ? 5 : 4;
+	float houseL = gameState == "nether" ? 7 : 4.8;
 
 	for (int i = 0; i < 4; i++) {
 		Vector3f pos = housePositions[i];
@@ -2458,6 +2964,11 @@ void keyboardFP(unsigned char key, int x, int y)
 		if (gameState == "gameover")
 		{
 			gameState = "menu";
+			// clear enemies
+			enemies.clear();
+			zombies.clear();
+			skeletons.clear();
+
 			glutPostRedisplay();
 			printf("Restarting game\n");
 		}
@@ -2670,14 +3181,23 @@ void shoot() {
 		}
 
 		// Check if all enemies are dead
-		if (enemies.size() == 0) {
-			printf("All enemies dead!\n");
-			printf("Wave %d complete!\n", wave->waveNumber);
+		if(!isPortalOpen)
+		{
+			if (enemies.size() == 0) {
+				printf("All enemies dead!\n");
+				printf("Wave %d complete!\n", wave->waveNumber);
 
-			// Start next wave
-			wave->waveOver();
+				// Start next wave
+				wave->waveOver();
 
-			spawnEnemies();
+				if (wave->waveNumber % 3 == 0) {
+					isPortalOpen = true;
+				}
+				else {
+					spawnEnemies();
+				}
+
+			}
 		}
 
 		// Clear the temporary vector
@@ -2704,7 +3224,10 @@ void spawnEnemies() {
 		float z = rand() % 15 + 30;
 
 		// Spawn zombie
-		Zombie* zombie = new Zombie(x, 0.45, z, 0, 150, model_zombie, church);
+		Zombie* zombie = new Zombie(x, 0.45, z, 0, 150, model_zombie, model_piglin, church);
+		zombie->inNether = (gameState == "nether");
+
+		//Zombie* zombie = new Zombie(x, 0, z, 0, 150, model_piglin, church);
 		zombies.push_back(zombie);
 		enemies.push_back(zombie);
 	}
