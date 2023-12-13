@@ -15,6 +15,7 @@ public:
 	float reloadTime;
 
 	bool canShoot = true;
+	bool isReloading = false;
 
 	float accuracy;
 

@@ -146,7 +146,7 @@ void HUD::draw() {
 	// Draw ammo above hearts (36 / 98)
 	// Draw ammo
 	char* p0s[20];
-	sprintf((char*)p0s, "%i / %i", 36, 98);
+	sprintf((char*)p0s, "%i / %i", player->currentWeapon->ammo, player->currentWeapon->totalAmmo);
 
 	//// white
 	glColor3f(1, 1, 1);

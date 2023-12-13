@@ -1,2 +1,3 @@
 C:\Users\shady\GUC\Semester 7\Graphics\Assignment 2\3D Template\OpenGL3DTemplate\Debug\OpenGL3DTemplate.exe
 C:\Users\shady\GUC\Semester 7\Graphics\Project3D\Debug\OpenGL3DTemplate.exe
+C:\Users\Mustafa\source\repos\ZombieCraft-Survival\Debug\OpenGL3DTemplate.exe

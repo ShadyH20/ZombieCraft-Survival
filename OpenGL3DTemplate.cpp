@@ -76,6 +76,7 @@ void keyboardFP(unsigned char key, int x, int y);
 void keyboard_upFP(unsigned char key, int x, int y);
 void mouseFP(int button, int state, int x, int y);
 void shoot();
+void reloadWeapon();
 void spawnEnemies();
 void drawHouses();
 void LoadEnemies();
@@ -259,6 +260,7 @@ GLuint tex_moon;
 // Sounds
 Sound* pistol_sound;
 Sound* scar_sound;
+Sound* sniper_sound;
 Sound* bg_music;
 Sound* damage_sound;
 
@@ -518,6 +520,21 @@ void renderText() {
 		colorRGBA(255, 0, 255, opacity);
 		printStroke(screenW / 2 - 180, screenH / 2, (char*)p0s, 0.28, 3.5);
 	}
+	
+	// If isReloading write "Reloading" in the middle of the screen
+	if (steve->currentWeapon->isReloading) {
+		char* p0s[30];
+		sprintf((char*)p0s, "Reloading");
+		float opacity = 1;
+		colorRGBA(255, 255, 255, opacity);
+		printStroke(screenW / 2 - 180, screenH / 2, (char*)p0s, 0.28, 3.5);
+		// Draw Reload countdown
+		sprintf((char*)p0s, "%i", 2);
+
+		// white
+		glColor3f(1, 1, 1);
+		printStroke(screenW / 2 - 10, screenH / 2 - 10, (char*)p0s, 0.2, 3);
+	}
 
 	//drawTime(screenW, screenH, timeLeft);
 
@@ -720,7 +737,7 @@ void drawHearts() {
 		for (int i = 0; i < hearts.size(); i++) {
 			Vector3f heart = hearts[i];
 			float distance = sqrt(pow(steve->x - heart.x, 2) + pow(steve->z - heart.z, 2));
-			if (distance < 0.5) {
+			if (distance < 0.5 && !steve->isDead) {
 				// remove the heart from the vector
 				hearts.erase(hearts.begin() + i);
 				// add a heart to the player
@@ -2209,6 +2226,25 @@ void resetGunCanShoot(int value) {
 	glutPostRedisplay();
 }
 
+void reloadWeapon(int value){
+	if (steve->currentWeapon->totalAmmo <= 0) {
+		steve->currentWeapon->canShoot = false;
+	}
+	else{
+		if (steve->currentWeapon->totalAmmo < steve->currentWeapon->maxAmmo)
+		{
+			steve->currentWeapon->totalAmmo -= steve->currentWeapon->totalAmmo;
+			steve->currentWeapon->ammo += steve->currentWeapon->totalAmmo;
+		}
+		else {
+		steve->currentWeapon->totalAmmo -= steve->currentWeapon->maxAmmo;
+		steve->currentWeapon->ammo += steve->currentWeapon->maxAmmo;
+		}
+	steve->currentWeapon->isReloading = false;
+	steve->currentWeapon->canShoot = true;
+	}
+}
+
 void startShootingProcedure() {
 	isAnimatingPistol = true;
 	steve->currentWeapon->canShoot = false;
@@ -2217,10 +2253,13 @@ void startShootingProcedure() {
 		// play sound
 		scar_sound->play(true);
 	}
-	else {
+	else if(steve->currentWeapon->name == "pistol") {
 		// play sound
 		//pistol_sound->play(true);
 		pistol_sound->play(true);
+	}
+	else {
+		sniper_sound->play(true);
 	}
 
 	glutPostRedisplay();
@@ -2314,7 +2353,7 @@ void LoadAssets()
 	// Weapon(int _maxAmmo, float _damage, float _fireRate, float _reloadTime, float _accuracy, float _range, Model_3DS _model, float _modelScale);
 	pistol = new Pistol(10, 40, 0.4, 1, 0.9, 10, model_pistol, 0.3);
 	scar = new Scar(30, 20, 0.1, 1, 0.9, 15, model_scar, 0.15);
-	sniper = new Sniper(5, 100, 1.4, 1, 0.9, 30, model_sniper, 0.05);
+	sniper = new Sniper(5, 100, 1.6, 2, 0.9, 30, model_sniper, 0.05);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -2338,6 +2377,9 @@ void LoadAssets()
 
 	scar_sound = new Sound("sounds/scar.mp3", false);
 	scar_sound->setVolume(0.3);
+
+	sniper_sound = new Sound("sounds/SniperSound.mp3", false);
+	sniper_sound->setVolume(0.6);
 
 	// PLAY BG MUSIC
 	bg_music->play(true);
@@ -3056,8 +3098,16 @@ void shoot() {
 	if (steve->isDead) return;
 	// Shoot
 	if (steve->currentWeapon->canShoot) {
-		startShootingProcedure();
-
+		if ((steve->currentWeapon->ammo > 0 ))
+		{
+			startShootingProcedure();
+			steve->currentWeapon->ammo--;
+		}
+		else {
+			steve->currentWeapon->canShoot = false;
+			steve->currentWeapon->isReloading = true;
+			glutTimerFunc((int)(1000 * steve->currentWeapon->reloadTime), reloadWeapon, 0);
+		}
 		// Sort zombies by nearest to player using Euclidean distance
 		std::sort(enemies.begin(), enemies.end(), [&](Enemy* a, Enemy* b) {
 			float distA = sqrt(pow(a->x - steve->x, 2) + pow(a->z - steve->z, 2) + pow(a->y - steve->y, 2));
