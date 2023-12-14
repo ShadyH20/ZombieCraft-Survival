@@ -81,6 +81,7 @@
     <ClCompile Include="classes\goal\Goal.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="classes\weapon\ammo\Ammo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utilities.hpp">
@@ -146,5 +147,6 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="gltext.h" />
+    <ClInclude Include="classes\weapon\ammo\Ammo.h" />
   </ItemGroup>
 </Project>

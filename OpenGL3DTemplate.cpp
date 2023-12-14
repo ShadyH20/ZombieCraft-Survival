@@ -26,6 +26,7 @@
 #include <classes/goal/Goal.h>
 #include <classes/wave/Wave.h>
 #include <classes/weapon/sniper/Sniper.h>
+#include <classes/weapon/ammo/Ammo.h>
 //#include <textures/Player/Cuboid.h>
 //#include <textures/Player/Player.cpp>
 
@@ -203,7 +204,7 @@ Sound* Skeleton::arrow_shot_sound = nullptr;
 std::vector<Vector3f> hearts;
 
 // Ammo
-std::vector<Vector3f> ammos;
+std::vector<Ammo*> ammos;
 
 
 // 
@@ -255,6 +256,7 @@ float villageScale = 0.5;
 // Textures
 GLTexture tex_ground;
 GLTexture tex_path;
+GLTexture tex_ammo;
 GLuint tex_sky;
 GLuint tex_moon;
 
@@ -517,19 +519,19 @@ void renderText() {
 	// If isPortalOpen write "Enter the portal" in the middle of the screen
 	if (isPortalOpen) {
 		char* p0s[30];
-		sprintf((char)p0s, "Enter the portal");
-		float opacity = (sin(textOpacity 0.5 * 3.1415 / 180) + 1) / 2;
+		sprintf((char*)p0s, "Enter the portal");
+		float opacity = (sin(textOpacity * 0.5 * 3.1415 / 180) + 1) / 2;
 		colorRGBA(255, 0, 255, opacity);
-		printStroke(screenW / 2 - 180, screenH / 2, (char)p0s, 0.28, 3.5);
+		printStroke(screenW / 2 - 180, screenH / 2, (char *)p0s, 0.28, 3.5);
 	}
 
 	// If isReloading write "Reloading" in the middle of the screen
 	if (steve->currentWeapon->isReloading && steve->currentWeapon->totalAmmo > 0) {
 		char p0s[30];
-		sprintf((char)p0s, "Reloading");
+		sprintf((char*)p0s, "Reloading");
 		float opacity = 1;
 		colorRGBA(255, 255, 255, opacity);
-		printStroke(screenW / 2 - 80, screenH / 2 - 20, (char)p0s, 0.28, 3.5);
+		printStroke(screenW / 2 - 80, screenH / 2 - 20, (char*)p0s, 0.28, 3.5);
 	}
 
 	//drawTime(screenW, screenH, timeLeft);
@@ -546,8 +548,8 @@ void renderText() {
 
 	// Write score top left
 	char* scoreText[20];
-	sprintf((char)scoreText, "SCORE %i", score);
-	printStroke(30, screenH - 50, (char)scoreText, 0.15, 2);
+	sprintf((char*)scoreText, "SCORE %i", score);
+	printStroke(30, screenH - 50, (char*)scoreText, 0.15, 2);
 
 	glPopMatrix();
 
@@ -715,15 +717,15 @@ void drawHearts() {
 
 		// draw heart
 		glPushMatrix();
-			glTranslatef(heart.x,
-				0.4 + 0.06 * sin(textOpacity * TO_RADIANS),
-				heart.z);
-			// Rotate y using textOpacity var
-			glRotatef(textOpacity * 0.5, 0, 1, 0);
+		glTranslatef(heart.x,
+			0.4 + 0.06 * sin(textOpacity * TO_RADIANS),
+			heart.z);
+		// Rotate y using textOpacity var
+		glRotatef(textOpacity * 0.5, 0, 1, 0);
 
-			//glScaled(0.5, 0.5, 0.5);
-			model_heart.Draw();
-			model_heart.scale = 0.03;
+		//glScaled(0.5, 0.5, 0.5);
+		model_heart.Draw();
+		model_heart.scale = 0.03;
 		glPopMatrix();
 	}
 
@@ -733,7 +735,7 @@ void drawHearts() {
 		for (int i = 0; i < hearts.size(); i++) {
 			Vector3f heart = hearts[i];
 			float distance = sqrt(pow(steve->x - heart.x, 2) + pow(steve->z - heart.z, 2));
-			if (distance < 0.5 && !steve->isDead) {
+			if (distance < 0.5) {
 				// remove the heart from the vector
 				hearts.erase(hearts.begin() + i);
 				// add a heart to the player
@@ -741,6 +743,33 @@ void drawHearts() {
 				// play sound
 				//damage_sound->play();
 			}
+		}
+	}
+
+	////////////////////////////////////
+
+	/// AMMO ///
+	for (int i = 0; i < ammos.size(); i++) {
+		Ammo* ammo = ammos[i];
+
+		// draw ammo
+		ammo->Draw(textOpacity);
+	}
+
+	// Check collision with player
+
+	for (int i = 0; i < ammos.size(); i++) {
+		Ammo* ammo = ammos[i];
+		float distance = sqrt(pow(steve->x - ammo->x, 2) + pow(steve->z - ammo->z, 2));
+		if (distance < 0.5) {
+			// remove the ammo from the vector
+			ammos.erase(ammos.begin() + i);
+
+			steve->currentWeapon->totalAmmo += 2 * steve->currentWeapon->maxAmmo;
+
+			//steve->ammo += 10;
+			// play sound
+			//damage_sound->play();
 		}
 	}
 }
@@ -2277,6 +2306,7 @@ void LoadAssets()
 	tex_ground.Load("Textures/grass.bmp");
 	tex_path.Load("Textures/path.bmp");
 	logo.Load("Textures/zombiecraft.png");
+	tex_ammo.Load("Textures/ammo.png");
 	//loadBMP(&tex_sky, "Textures/skybox.bmp", true);
 	loadBMP(&tex_sky, "Textures/blu-sky-3.bmp", true);
 	loadBMP(&tex_moon, "Textures/moon.bmp", true);
@@ -3202,9 +3232,12 @@ void shoot() {
 					int randNum = rand() % 10;
 					if (randNum < 5)
 						hearts.push_back(Vector3f(enemy->x, enemy->y, enemy->z));
-					int randNum = rand() % 10;
+
+					// Place ammo at the enemy's position
+					// it should have a 50% chance of dropping ammo
+					randNum = rand() % 10;
 					if (randNum < 5)
-						ammos.push_back(Vector3f(enemy->x, enemy->y, enemy->z));
+						ammos.push_back(new Ammo(enemy->x + 0.3, enemy->y, enemy->z, tex_ammo));
 				}
 
 				// dont hit any more zombies
