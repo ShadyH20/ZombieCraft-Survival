@@ -6,7 +6,7 @@ Written in C++
 
 ## Video Showcase
 
-[![Your Video Thumbnail](https://img.youtube.com/vi/i4fRV2AtiVs/maxresdefault.jpg)](https://www.youtube.com/watch?v=i4fRV2AtiVs)
+[![Your Video Thumbnail](https://i.imgur.com/uFpDX44.png)](https://youtu.be/1TbmTa5k7Io)
 
 ## Controls
 
