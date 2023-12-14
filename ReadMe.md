@@ -1,1 +1,1 @@
-![AltText](textures/logo.png)
+![AltText](textures/GameLogo.png)
