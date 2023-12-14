@@ -1,9 +1,4 @@
-﻿  Ammo.cpp
-C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\classes\weapon\ammo\Ammo.cpp(13,7): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\classes\weapon\ammo\Ammo.cpp(16,21): warning C4244: 'argument': conversion from 'double' to 'GLfloat', possible loss of data
-C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\classes\weapon\ammo\Ammo.cpp(22,15): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\classes\weapon\ammo\Ammo.cpp(23,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  OpenGL3DTemplate.cpp
+﻿  OpenGL3DTemplate.cpp
 C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\utilities.hpp(230,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   (compiling source file 'OpenGL3DTemplate.cpp')
   
@@ -23,10 +18,4 @@ C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\OpenGL3DTemplate.cpp(752,20
 C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\OpenGL3DTemplate.cpp(761,20): warning C4018: '<': signed/unsigned mismatch
 C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\OpenGL3DTemplate.cpp(1886,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
 C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\OpenGL3DTemplate.cpp(1890,2): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  MeshMain.cpp
-  Player.cpp
-C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\Vector3f.h(33,22): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  (compiling source file 'textures/Player/Player.cpp')
-  
-  Generating Code...
   OpenGL3DTemplate.vcxproj -> C:\Users\shady\Documents\GitHub\ZombieCraft-Survival\Debug\OpenGL3DTemplate.exe

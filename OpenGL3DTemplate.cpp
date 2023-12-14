@@ -2253,20 +2253,20 @@ void resetGunCanShoot(int value) {
 
 
 void reloadWeapon(int value) {
-	if (steve->currentWeapon->totalAmmo <= 0 && steve->currentWeapon->ammo <= 0) {
-		steve->currentWeapon->canShoot = false;
-	}
-	else {
-		int minimum = (steve->currentWeapon->maxAmmo - steve->currentWeapon->ammo);
-		if (steve->currentWeapon->totalAmmo < minimum) {
-			minimum = steve->currentWeapon->totalAmmo;
-		}
-		steve->currentWeapon->totalAmmo -= minimum;
-		steve->currentWeapon->ammo += minimum;
+    if (steve->currentWeapon->totalAmmo <= 0 && steve->currentWeapon->ammo <= 0) {
+        steve->currentWeapon->canShoot = false;
+    }
+    else {
+        int minimum = (steve->currentWeapon->maxAmmo - steve->currentWeapon->ammo);
+        if (steve->currentWeapon->totalAmmo < minimum) {
+            minimum = steve->currentWeapon->totalAmmo;
+        }
+        steve->currentWeapon->totalAmmo -= minimum;
+        steve->currentWeapon->ammo += minimum;
 
-		steve->currentWeapon->isReloading = false;
-		steve->currentWeapon->canShoot = true;
-	}
+        steve->currentWeapon->isReloading = false;
+        steve->currentWeapon->canShoot = true;
+    }
 }
 
 void startShootingProcedure() {
@@ -3142,14 +3142,17 @@ void shoot() {
 	if (steve->isDead) return;
 	// Shoot
 	if (steve->currentWeapon->canShoot) {
-		if ((steve->currentWeapon->ammo > 1 ))
-		{
-			steve->currentWeapon->ammo--;
+		if (steve->currentWeapon->ammo > 0) {
 			startShootingProcedure();
+			steve->currentWeapon->ammo--;
 		}
-		else {
-			reload();
+
+		if (steve->currentWeapon->ammo == 0) {
+			steve->currentWeapon->canShoot = false;
+			steve->currentWeapon->isReloading = true;
+			glutTimerFunc((int)(1000 * steve->currentWeapon->reloadTime), reloadWeapon, 0);
 		}
+
 		// Sort zombies by nearest to player using Euclidean distance
 		std::sort(enemies.begin(), enemies.end(), [&](Enemy* a, Enemy* b) {
 			float distA = sqrt(pow(a->x - steve->x, 2) + pow(a->z - steve->z, 2) + pow(a->y - steve->y, 2));
