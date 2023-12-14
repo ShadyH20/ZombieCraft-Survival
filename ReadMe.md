@@ -4,6 +4,10 @@ An OpenGL game named ‘ZombieCraft Survival’ -- A first person shooter, minec
 
 Written in C++
 
+## Video Showcase
+
+[![Your Video Thumbnail](https://img.youtube.com/vi/i4fRV2AtiVs/maxresdefault.jpg)](https://www.youtube.com/watch?v=i4fRV2AtiVs)
+
 ## Controls
 
 - **Movement:**
@@ -36,3 +40,10 @@ Written in C++
 
 - **Reload:**
   - R: Reload the current weapon
+ 
+## Installation
+
+1. Download the repository as a Zip
+2. Extract it
+3. Open the .sln file in the root of the project
+4. Run and enjoy :)
