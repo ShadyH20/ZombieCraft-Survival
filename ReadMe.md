@@ -11,9 +11,18 @@ Written in C++
   - A: Move left
   - S: Move backward
   - D: Move right
+ 
+  - Q, E: Up and Down when respawning
+
+- **Jump:**
+  - Spacebar: Jump
 
 - **Camera Control:**
   - Move the mouse to control the camera
+
+- **View Toggle:**
+  - C: Toggle between first-person and third-person views
+  - V: Face cam in third-person view
 
 - **Aiming and Shooting:**
   - Right-click: Hold to aim
@@ -27,9 +36,3 @@ Written in C++
 
 - **Reload:**
   - R: Reload the current weapon
-
-- **View Toggle:**
-  - C: Toggle between first-person and third-person views
-
-- **Jump:**
-  - Spacebar: Jump
